@@ -15,11 +15,7 @@ export async function POST(request: NextRequest) {
       with: {
         sender: true,
         receiver: true,
-        trip: {
-          with: {
-            vessel: true
-          }
-        },
+        vessel: true,
         logs: {
           orderBy: (logs) => logs.timestamp,
         },
@@ -47,8 +43,8 @@ export async function POST(request: NextRequest) {
       itemName: shipment.itemName,
       itemDescription: shipment.itemDescription,
       itemImage: shipment.itemImage,
-      vesselName: shipment.trip?.vessel?.name,
-      vesselImo: shipment.trip?.vessel?.imo,
+      vesselName: shipment.vessel?.name,
+      vesselImo: shipment.vessel?.imo,
       sender: {
         name: shipment.sender.name,
         email: shipment.sender.email,

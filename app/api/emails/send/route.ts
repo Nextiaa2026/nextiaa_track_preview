@@ -6,7 +6,7 @@ import { shipments, shipmentLogs } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
-  let shipmentIdForLog: number | undefined;
+  let shipmentIdForLog: string | undefined;
 
   try {
     const session = await auth();
@@ -16,9 +16,9 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { type, data } = body;
-    const payload = data as { shipmentId?: number; trackingNumber?: string };
+    const payload = data as { shipmentId?: string; trackingNumber?: string };
 
-    if (typeof payload?.shipmentId === "number") {
+    if (payload?.shipmentId) {
       shipmentIdForLog = payload.shipmentId;
     } else if (payload?.trackingNumber) {
       const shipment = await db.query.shipments.findFirst({

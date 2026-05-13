@@ -14,8 +14,8 @@ import { fr } from "@/lib/i18n/fr";
 
 interface CustomerComboboxProps {
   customers: Customer[];
-  value?: number;
-  onSelect: (customerId: number) => void;
+  value?: string;
+  onSelect: (customerId: string) => void;
   placeholder?: string;
   error?: boolean;
 }

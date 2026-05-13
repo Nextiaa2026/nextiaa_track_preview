@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
-import { shipments } from "@/db/schema";
-import { inArray } from "drizzle-orm";
 
 export async function GET() {
   try {
@@ -12,34 +10,27 @@ export async function GET() {
     }
 
     const activeShipments = await db.query.shipments.findMany({
-      where: (s, { and, eq, inArray }) => 
-        and(
-          eq(s.userId, Number(session.user.id)),
-          inArray(s.status, ["pending", "in_transit"])
-        ),
+      where: (s, { inArray }) => 
+        inArray(s.status, ["pending", "in_transit"]),
       with: {
         sender: true,
         receiver: true,
-        trip: {
-          with: {
-            vessel: true,
-          }
-        },
+        vessel: true,
       },
       orderBy: (s, { desc }) => [desc(s.updatedAt)],
     });
 
     const markers = activeShipments
       .map((shipment) => {
-        const vessel = shipment.trip?.vessel;
+        const vessel = shipment.vessel;
         const lat =
           vessel?.lastKnownLat ??
-          shipment.receiver.latitude ??
-          shipment.sender.latitude;
+          shipment.receiver?.latitude ??
+          shipment.sender?.latitude;
         const lon =
           vessel?.lastKnownLon ??
-          shipment.receiver.longitude ??
-          shipment.sender.longitude;
+          shipment.receiver?.longitude ??
+          shipment.sender?.longitude;
         if (lat == null || lon == null) return null;
         return {
           shipmentId: shipment.id,

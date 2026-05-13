@@ -17,8 +17,8 @@ import { fr } from "@/lib/i18n/fr";
 
 export type VesselSearchComboboxProps = {
   id?: string;
-  value?: number | null;
-  onChange: (vesselId: number | undefined, vessel: Vessel | null) => void;
+  value?: string | null;
+  onChange: (vesselId: string | undefined, vessel: Vessel | null) => void;
   disabled?: boolean;
   error?: boolean;
   placeholder?: string;

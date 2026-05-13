@@ -8,7 +8,7 @@ import {
   integer,
   uuid,
 } from "drizzle-orm/pg-core";
-import { relations, sql } from "drizzle-orm";
+import { relations } from "drizzle-orm";
 
 // ─── Auth Table ─────────────────────────────────────────────────────────────
 // Only one user (admin) will exist in this system.
