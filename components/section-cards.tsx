@@ -12,8 +12,11 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ChartUpIcon, ChartDownIcon } from "@hugeicons/core-free-icons"
 import { useDashboardStats } from "@/hooks/useShipments"
+import { useTranslations } from "next-intl"
 
 export function SectionCards() {
+  const t = useTranslations("dashboard.stats")
+  const tc = useTranslations("forms.common")
   const { data: stats, isLoading } = useDashboardStats()
 
   if (isLoading || !stats) {
@@ -22,7 +25,7 @@ export function SectionCards() {
         {Array.from({ length: 4 }).map((_, idx) => (
           <Card key={idx} className="@container/card">
             <CardHeader>
-              <CardDescription>Chargement...</CardDescription>
+              <CardDescription>{tc("loading")}</CardDescription>
               <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
                 --
               </CardTitle>
@@ -37,30 +40,30 @@ export function SectionCards() {
     <div className="grid grid-cols-1 gap-4 px-4 md:grid-cols-2 xl:grid-cols-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 dark:*:data-[slot=card]:bg-card">
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Expéditions totales</CardDescription>
+          <CardDescription>{t("totalShipments")}</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             {stats.totalShipments.toLocaleString()}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
               <HugeiconsIcon icon={ChartUpIcon} strokeWidth={2} />
-              Temps réel
+              {t("realTime")}
             </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            Expéditions créées{" "}
+            {t("shipmentsCreated")}{" "}
             <HugeiconsIcon icon={ChartUpIcon} strokeWidth={2} className="size-4" />
           </div>
           <div className="text-muted-foreground">
-            Tous statuts confondus
+            {t("allStatus")}
           </div>
         </CardFooter>
       </Card>
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Expéditions livrées</CardDescription>
+          <CardDescription>{t("deliveredShipments")}</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             {stats.deliveredShipments.toLocaleString()}
           </CardTitle>
@@ -73,55 +76,55 @@ export function SectionCards() {
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            Taux de livraison réussi{" "}
+            {t("successRate")}{" "}
             <HugeiconsIcon icon={ChartUpIcon} strokeWidth={2} className="size-4" />
           </div>
           <div className="text-muted-foreground">
-            Livrées sur l&apos;ensemble des expéditions
+            {t("deliveredTotal")}
           </div>
         </CardFooter>
       </Card>
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Consultations client</CardDescription>
+          <CardDescription>{t("clientViews")}</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             {stats.clientTrackingViews.toLocaleString()}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
               <HugeiconsIcon icon={ChartUpIcon} strokeWidth={2} />
-              Clients
+              {t("clients")}
             </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            Recherches de suivi publiques réussies{" "}
+            {t("successfulSearches")}{" "}
             <HugeiconsIcon icon={ChartUpIcon} strokeWidth={2} className="size-4" />
           </div>
-          <div className="text-muted-foreground">Chaque consultation est journalisée</div>
+          <div className="text-muted-foreground">{t("eachLogged")}</div>
         </CardFooter>
       </Card>
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Activités Resend</CardDescription>
+          <CardDescription>{t("resendActivities")}</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             {stats.resendEmailsSent.toLocaleString()}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
               <HugeiconsIcon icon={ChartDownIcon} strokeWidth={2} />
-              {stats.resendEmailFailures.toLocaleString()} échecs
+              {stats.resendEmailFailures.toLocaleString()} {t("failures")}
             </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            E-mails envoyés via Resend{" "}
+            {t("emailsSent")}{" "}
             <HugeiconsIcon icon={ChartDownIcon} strokeWidth={2} className="size-4" />
           </div>
           <div className="text-muted-foreground">
-            {stats.totalLogs.toLocaleString()} journaux (suivi + opérations)
+            {(stats.totalTripLogs ?? 0).toLocaleString()} {t("tripLogs")}
           </div>
         </CardFooter>
       </Card>

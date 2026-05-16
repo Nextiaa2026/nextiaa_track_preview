@@ -7,6 +7,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 function navActive(pathname: string, url: string) {
@@ -26,6 +27,13 @@ export function NavMain({
   }[];
 }) {
   const pathname = usePathname();
+  const { setOpenMobile, isMobile } = useSidebar();
+
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   return (
     <SidebarGroup>
@@ -39,7 +47,7 @@ export function NavMain({
               isActive={navActive(pathname, item.url)}
               className="font-normal"
             >
-              <Link href={item.url as string}>
+              <Link href={item.url as string} onClick={handleLinkClick}>
                 {item.icon}
                 <span>{item.title}</span>
               </Link>

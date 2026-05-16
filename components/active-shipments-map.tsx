@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useTranslations } from "next-intl";
 
 const ActiveShipmentsLeaflet = dynamic(
   () =>
@@ -18,12 +19,14 @@ const ActiveShipmentsLeaflet = dynamic(
 );
 
 export function ActiveShipmentsMap() {
+  const t = useTranslations("dashboard");
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Carte des expéditions actives</CardTitle>
+        <CardTitle>{t("activeMapTitle")}</CardTitle>
         <CardDescription>
-          Position des expéditions en attente et en transit.
+          {t("activeMapDescription")}
         </CardDescription>
       </CardHeader>
       <CardContent>

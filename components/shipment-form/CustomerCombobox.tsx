@@ -10,7 +10,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import type { Customer } from "@/services/customer.service";
-import { fr } from "@/lib/i18n/fr";
+import { useTranslations } from "next-intl";
 
 interface CustomerComboboxProps {
   customers: Customer[];
@@ -24,9 +24,11 @@ export function CustomerCombobox({
   customers,
   value,
   onSelect,
-  placeholder = fr.forms.common.selectPlaceholder,
+  placeholder,
   error,
 }: CustomerComboboxProps) {
+  const fc = useTranslations("forms.common");
+  const displayPlaceholder = placeholder || fc("selectPlaceholder");
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
 
@@ -64,7 +66,7 @@ export function CustomerCombobox({
               {selectedCustomer.name} ({selectedCustomer.email})
             </span>
           ) : (
-            placeholder
+            displayPlaceholder
           )}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -73,17 +75,17 @@ export function CustomerCombobox({
         <div className="flex flex-col w-full max-h-[300px]">
           <div className="flex items-center border-b px-3 h-10 shrink-0">
             <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-            <input
+             <input
               className="flex h-full w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
-              placeholder={fr.forms.common.search}
+              placeholder={fc("search")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <div className="overflow-y-auto overflow-x-hidden p-1 flex-1">
-            {filteredCustomers.length === 0 ? (
+             {filteredCustomers.length === 0 ? (
               <div className="py-6 text-center text-sm text-muted-foreground">
-                {fr.forms.common.noResults}
+                {fc("noResults")}
               </div>
             ) : (
               filteredCustomers.map((customer) => (

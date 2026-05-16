@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { count, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { shipments, shipmentLogs } from "@/db/schema";
+import { shipments, trips, tripLogs } from "@/db/schema";
 import { auth } from "@/lib/auth";
 
 export async function GET() {
@@ -16,48 +16,23 @@ export async function GET() {
       deliveredShipmentsResult,
       inTransitShipmentsResult,
       failedShipmentsResult,
-      totalLogsResult,
-      clientTrackingViewsResult,
-      resendEmailsSentResult,
-      resendEmailFailuresResult,
+      totalTripsResult,
+      totalTripLogsResult,
     ] = await Promise.all([
       db.select({ value: count() }).from(shipments),
-      db
-        .select({ value: count() })
-        .from(shipments)
-        .where(eq(shipments.status, "delivered")),
-      db
-        .select({ value: count() })
-        .from(shipments)
-        .where(eq(shipments.status, "in_transit")),
-      db
-        .select({ value: count() })
-        .from(shipments)
-        .where(eq(shipments.status, "failed")),
-      
-      db.select({ value: count() }).from(shipmentLogs),
-      
-      db.select({ value: count() })
-        .from(shipmentLogs)
-        .where(eq(shipmentLogs.status, "tracking_viewed")),
-      
-      db.select({ value: count() })
-        .from(shipmentLogs)
-        .where(eq(shipmentLogs.status, "email_sent")),
-      
-      db.select({ value: count() })
-        .from(shipmentLogs)
-        .where(eq(shipmentLogs.status, "email_failed")),
+      db.select({ value: count() }).from(shipments).where(eq(shipments.status, "delivered")),
+      db.select({ value: count() }).from(shipments).where(eq(shipments.status, "in_transit")),
+      db.select({ value: count() }).from(shipments).where(eq(shipments.status, "failed")),
+      db.select({ value: count() }).from(trips),
+      db.select({ value: count() }).from(tripLogs),
     ]);
 
     const totalShipments = Number(totalShipmentsResult[0]?.value ?? 0);
     const deliveredShipments = Number(deliveredShipmentsResult[0]?.value ?? 0);
     const inTransitShipments = Number(inTransitShipmentsResult[0]?.value ?? 0);
     const failedShipments = Number(failedShipmentsResult[0]?.value ?? 0);
-    const totalLogs = Number(totalLogsResult[0]?.value ?? 0);
-    const clientTrackingViews = Number(clientTrackingViewsResult[0]?.value ?? 0);
-    const resendEmailsSent = Number(resendEmailsSentResult[0]?.value ?? 0);
-    const resendEmailFailures = Number(resendEmailFailuresResult[0]?.value ?? 0);
+    const totalTrips = Number(totalTripsResult[0]?.value ?? 0);
+    const totalTripLogs = Number(totalTripLogsResult[0]?.value ?? 0);
     const deliverySuccessRate =
       totalShipments > 0 ? (deliveredShipments / totalShipments) * 100 : 0;
 
@@ -66,17 +41,15 @@ export async function GET() {
       deliveredShipments,
       inTransitShipments,
       failedShipments,
-      totalLogs,
-      clientTrackingViews,
-      resendEmailsSent,
-      resendEmailFailures,
+      totalTrips,
+      totalTripLogs,
+      clientTrackingViews: 0,
+      resendEmailsSent: 0,
+      resendEmailFailures: 0,
       deliverySuccessRate: Number(deliverySuccessRate.toFixed(1)),
     });
   } catch (error) {
     console.error("Get dashboard stats error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

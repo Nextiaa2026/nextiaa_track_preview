@@ -112,6 +112,12 @@ export function DataTable<TData>({
     getCoreRowModel: getCoreRowModel(),
     manualPagination: true,
     pageCount: pageCount,
+    getRowId: (row) => {
+      // Use the record's own `id` field when available so rowSelection keys
+      // are stable record IDs rather than volatile row indices.
+      const r = row as Record<string, unknown>;
+      return typeof r.id === "string" ? r.id : String(Math.random());
+    },
     state: {
       rowSelection,
       pagination: {
@@ -132,10 +138,10 @@ export function DataTable<TData>({
   return (
     <div className="space-y-4">
       {/* Toolbar Area */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ">
-        <div className="flex items-center gap-3 w-full sm:w-auto flex-1">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto flex-1">
           {onSearchChange && (
-            <div className="relative w-full max-w-sm group">
+            <div className="relative w-full sm:max-w-xs group">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
               <Input
                 placeholder={searchPlaceholder}
@@ -146,16 +152,16 @@ export function DataTable<TData>({
             </div>
           )}
 
-          {filters}
+          {filters && <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">{filters}</div>}
         </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+        <div className="flex items-center gap-2 w-full lg:w-auto justify-end">
           {actions}
         </div>
       </div>
 
       {/* Table Area */}
-      <div className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden relative">
-        <Table>
+      <div className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-x-auto relative">
+        <Table className="min-w-full">
           <TableHeader className="bg-gray-50/50">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
@@ -165,7 +171,7 @@ export function DataTable<TData>({
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
-                    className="font-normal text-gray-900 h-12"
+                    className="font-normal text-gray-900 h-12 whitespace-nowrap"
                   >
                     {header.isPlaceholder
                       ? null
@@ -231,14 +237,14 @@ export function DataTable<TData>({
 
       {/* Pagination Area */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 py-1">
-        <div className="text-sm text-gray-500 font-normal order-2 sm:order-1">
+        <div className="text-sm text-gray-500 font-normal order-2 sm:order-1 hidden sm:block">
           {Object.keys(rowSelection).length} of{" "}
           {table.getFilteredRowModel().rows.length} row(s) selected.
         </div>
 
-        <div className="flex items-center gap-6 lg:gap-8 order-1 sm:order-2 w-full sm:w-auto justify-center sm:justify-end">
+        <div className="flex flex-wrap items-center gap-4 lg:gap-8 order-1 sm:order-2 w-full sm:w-auto justify-center sm:justify-end">
           <div className="flex items-center gap-2">
-            <p className="text-sm font-normal text-gray-700 whitespace-nowrap">
+            <p className="text-sm font-normal text-gray-700 whitespace-nowrap hidden xs:block">
               Rows per page
             </p>
             <select
@@ -254,7 +260,7 @@ export function DataTable<TData>({
             </select>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-4">
             <div className="text-sm font-normal text-gray-700 min-w-[100px] text-center">
               Page <span className="text-primary">{page}</span> of {pageCount}
             </div>

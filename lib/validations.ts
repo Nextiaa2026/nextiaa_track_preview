@@ -48,6 +48,7 @@ const shipmentPartyRefines = <S extends z.ZodObject<z.ZodRawShape>>(schema: S) =
 
 const shipmentSharedShape = {
   trackingNumber: z.string().min(5, "Le numéro de suivi est obligatoire"),
+  chassisNumber: z.string().min(2, "Le numéro de châssis est obligatoire"),
   shipmentType: z
     .enum(["international", "local"], {
       error: "Le type d'expédition est obligatoire",
@@ -55,12 +56,10 @@ const shipmentSharedShape = {
     .default("international"),
   senderId: z.string().uuid().optional(),
   receiverId: z.string().uuid().optional(),
-  vesselId: z.string().uuid().optional(),
+  tripId: z.string().uuid().optional(),
   itemDescription: z.string().optional(),
   itemWeight: z.string().optional(),
   itemDimensions: z.string().optional(),
-  vesselName: z.string().optional(),
-  vesselImo: z.string().optional(),
   itemImage: z
     .string()
     .url("URL de l'image invalide")
@@ -87,12 +86,12 @@ export const shipmentFormSchema = z.object({
   ),
 });
 
-/** Step “Next” — existing customer pick */
+/** Step "Next" — existing customer pick */
 export const wizardSenderExistingSchema = z.object({
   senderId: z.string({ error: "Choisissez un expéditeur" }).uuid(),
 });
 
-/** Step “Next” — new sender */
+/** Step "Next" — new sender */
 export const wizardSenderNewSchema = z.object({
   sender: customerSchema,
 });
@@ -105,15 +104,16 @@ export const wizardReceiverNewSchema = z.object({
   receiver: customerSchema,
 });
 
-/** Items step */
+/** Items step — chassisNumber required, tripId optional */
 export const wizardItemsSchema = z.object({
   trackingNumber: z.string().min(5, "Le numéro de suivi est obligatoire"),
+  chassisNumber: z.string().min(2, "Le numéro de châssis est obligatoire"),
   shipmentType: z.enum(["international", "local"]),
   itemName: z.string().min(2, "Le titre de l'article est obligatoire"),
   itemDescription: z.string().optional(),
   itemWeight: z.string().optional(),
   itemDimensions: z.string().optional(),
-  vesselId: z.string({ error: "Choisissez un transport" }).uuid(),
+  tripId: z.string().uuid().optional(),
   shippingCost: z.preprocess(
     optionalShippingCost,
     z
@@ -126,38 +126,33 @@ export const wizardItemsSchema = z.object({
 
 /** API + final register */
 export const shipmentSchema = shipmentPartyRefines(
-  z
-    .object({
-      ...shipmentCoreShape,
-      itemName: z.string().min(2, "Le titre de l'article est obligatoire"),
-      shippingCost: z.preprocess(
-        optionalShippingCost,
-        z
-          .number({ error: "Les frais d'expédition sont obligatoires" })
-          .int()
-          .positive("Les frais d'expédition doivent être positifs"),
-      ),
-    })
-    .extend({
-      vesselId: z.string({ error: "Choisissez un transport" }).uuid(),
-    }),
+  z.object({
+    ...shipmentCoreShape,
+    itemName: z.string().min(2, "Le titre de l'article est obligatoire"),
+    shippingCost: z.preprocess(
+      optionalShippingCost,
+      z
+        .number({ error: "Les frais d'expédition sont obligatoires" })
+        .int()
+        .positive("Les frais d'expédition doivent être positifs"),
+    ),
+  }),
 );
 
 /** PATCH updates */
 export const shipmentPatchSchema = z
   .object({
     trackingNumber: z.string().min(5).optional(),
+    chassisNumber: z.string().min(2).optional(),
     shipmentType: z.enum(["international", "local"]).optional(),
     senderId: z.string().uuid().optional(),
     receiverId: z.string().uuid().optional(),
-    vesselId: z.string().uuid().nullable().optional(),
+    tripId: z.string().uuid().nullable().optional(),
     status: z.enum(["pending", "in_transit", "delivered", "failed"]).optional(),
     itemName: z.string().min(2).optional(),
     itemDescription: z.string().optional(),
     itemWeight: z.string().optional(),
     itemDimensions: z.string().optional(),
-    vesselName: z.string().optional(),
-    vesselImo: z.string().optional(),
     itemImage: z
       .union([
         z.string().url("URL de l'image invalide"),
@@ -173,8 +168,36 @@ export const shipmentPatchSchema = z
   })
   .strict();
 
-export const shipmentLogSchema = z.object({
-  shipmentId: z.string({ error: "Une expédition doit être sélectionnée" }).uuid(),
+// ─── Trip schemas ─────────────────────────────────────────────────────────────
+
+export const tripSchema = z.object({
+  name: z.string().min(2, "Le nom du trajet est obligatoire"),
+  vesselId: z.string().uuid().optional().nullable(),
+  origin: z.string().optional(),
+  destination: z.string().optional(),
+  departureDate: z.coerce.date().optional().nullable(),
+  arrivalDate: z.coerce.date().optional().nullable(),
+  notes: z.string().optional(),
+});
+
+export const tripPatchSchema = z
+  .object({
+    name: z.string().min(2).optional(),
+    vesselId: z.string().uuid().nullable().optional(),
+    origin: z.string().optional(),
+    destination: z.string().optional(),
+    departureDate: z.union([z.coerce.date(), z.null()]).optional(),
+    arrivalDate: z.union([z.coerce.date(), z.null()]).optional(),
+    status: z.enum(["pending", "in_transit", "delivered", "failed"]).optional(),
+    notes: z.string().optional(),
+    notifyRecipients: z.boolean().optional(),
+  })
+  .strict();
+
+// ─── Trip Log schema ──────────────────────────────────────────────────────────
+
+export const tripLogSchema = z.object({
+  tripId: z.string({ error: "Un trajet doit être sélectionné" }).uuid(),
   status: z.enum(["pending", "in_transit", "delivered", "failed"]),
   location: z.string().optional(),
   address: z.string().optional(),
@@ -190,7 +213,9 @@ export type ShipmentFormValues = z.infer<typeof shipmentFormSchema>;
 export type ShipmentInput = z.infer<typeof shipmentSchema>;
 export type ShipmentPatchInput = z.infer<typeof shipmentPatchSchema>;
 export type WizardItemsValues = z.infer<typeof wizardItemsSchema>;
-export type ShipmentLogInput = z.infer<typeof shipmentLogSchema>;
+export type TripInput = z.infer<typeof tripSchema>;
+export type TripPatchInput = z.infer<typeof tripPatchSchema>;
+export type TripLogInput = z.infer<typeof tripLogSchema>;
 export type TrackingInput = z.infer<typeof trackingSchema>;
 export type UserInput = z.infer<typeof userSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;

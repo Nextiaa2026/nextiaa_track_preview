@@ -19,6 +19,24 @@ export function generateShipmentNumber(): string {
 }
 
 /**
+ * Generate a unique trip name
+ * Format: TRYYMMDDXX (10 characters)
+ */
+export function generateTripName(): string {
+  const date = new Date();
+  const yy = String(date.getFullYear()).slice(-2);
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  const random = Array.from({ length: 2 }, () =>
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".charAt(
+      Math.floor(Math.random() * 36),
+    ),
+  ).join("");
+
+  return `TR${yy}${mm}${dd}${random}`;
+}
+
+/**
  * Generate a unique tracking number
  * Format: TRK-YYYYMMDD-XXXXX
  */

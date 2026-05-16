@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/popover";
 import { useVessels } from "@/hooks/useShipments";
 import type { Vessel } from "@/services/shipment.service";
-import { fr } from "@/lib/i18n/fr";
+import { useTranslations } from "next-intl";
 
 export type VesselSearchComboboxProps = {
   id?: string;
@@ -30,8 +30,10 @@ export function VesselSearchCombobox({
   onChange,
   disabled,
   error,
-  placeholder = fr.forms.shipmentWizard.vesselSearch,
+  placeholder,
 }: VesselSearchComboboxProps) {
+  const sw = useTranslations("forms.shipmentWizard");
+  const displayPlaceholder = placeholder || sw("vesselSearch");
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const deferredQuery = React.useDeferredValue(query.trim());
@@ -73,7 +75,7 @@ export function VesselSearchCombobox({
             !value && "text-muted-foreground",
           )}
         >
-          <span className="truncate text-left">{label ?? placeholder}</span>
+          <span className="truncate text-left">{label ?? displayPlaceholder}</span>
           <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -81,25 +83,25 @@ export function VesselSearchCombobox({
         className="w-(--radix-popover-trigger-width) min-w-[280px] max-w-[calc(100vw-2rem)] p-0"
         align="start"
       >
-        <Command
+         <Command
           shouldFilter={false}
           className="flex max-h-72 flex-col overflow-hidden rounded-lg bg-popover text-popover-foreground"
-          label={fr.forms.shipmentWizard.vesselCommandLabel}
+          label={sw("vesselCommandLabel")}
         >
-          <Command.Input
-            placeholder={placeholder}
+           <Command.Input
+            placeholder={displayPlaceholder}
             value={query}
             onValueChange={setQuery}
             className="flex h-11 w-full border-b border-border bg-transparent px-3 text-sm outline-none placeholder:text-muted-foreground"
           />
           <Command.List className="max-h-52 overflow-y-auto p-1">
-            {isFetching ? (
+             {isFetching ? (
               <div className="px-2 py-6 text-center text-sm text-muted-foreground">
-                {fr.forms.shipmentWizard.vesselLoading}
+                {sw("vesselLoading")}
               </div>
-            ) : vessels.length === 0 ? (
+             ) : vessels.length === 0 ? (
               <Command.Empty className="py-6 text-center text-sm text-muted-foreground">
-                {fr.forms.shipmentWizard.vesselEmpty}
+                {sw("vesselEmpty")}
               </Command.Empty>
             ) : (
               <Command.Group>

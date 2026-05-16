@@ -5,11 +5,12 @@ import { cn } from "@/lib/utils";
 interface LogoProps {
   className?: string;
   showText?: boolean;
+  onClick?: () => void;
 }
 
-export function Logo({ className, showText = true }: LogoProps) {
+export function Logo({ className, showText = true, onClick }: LogoProps) {
   return (
-    <Link href="/dashboard" className={cn("flex items-center gap-2.5", className)}>
+    <Link href="/dashboard" className={cn("flex items-center gap-2.5", className)} onClick={onClick}>
       <div className="relative size-8 shrink-0 overflow-hidden rounded-lg shadow-sm border border-white/10">
         <Image
           src="/favicon.png"

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useShipment, useDeleteShipment, useCreateReceipt } from "@/hooks/useShipments";
-import { AddShipmentLogSheet } from "@/components/sheets/AddShipmentLogSheet";
+import { AddTripLogSheet } from "@/components/sheets/AddTripLogSheet";
 import { CreateShipmentSheet } from "@/components/sheets/CreateShipmentSheet";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -158,6 +158,8 @@ export default function ShipmentDetailPage() {
 
   const overviewStats = useMemo<OverviewStatRow[]>(() => {
     if (!shipment) return [];
+    const trip = shipment.trip;
+    const vessel = trip?.vessel;
     return [
       {
         label: "Estimated Delivery",
@@ -172,10 +174,22 @@ export default function ShipmentDetailPage() {
         color: "text-blue-600",
       },
       {
-        label: "Vessel / Carrier",
-        value: shipment.vesselName || "Standard Freight",
+        label: "Trip",
+        value: trip?.name || "No trip assigned",
         icon: CargoShipIcon,
         color: "text-indigo-600",
+      },
+      {
+        label: "Vessel / Carrier",
+        value: vessel?.name || "—",
+        icon: CargoShipIcon,
+        color: "text-indigo-600",
+      },
+      {
+        label: "Chassis Number",
+        value: shipment.chassisNumber,
+        icon: PackageIcon,
+        color: "text-orange-600",
       },
       {
         label: "Cargo Weight",
@@ -191,7 +205,7 @@ export default function ShipmentDetailPage() {
       },
       {
         label: "Vessel IMO",
-        value: shipment.vesselImo || "N/A",
+        value: vessel?.imo || "N/A",
         icon: CargoShipIcon,
         color: "text-slate-600",
       },
@@ -457,49 +471,49 @@ export default function ShipmentDetailPage() {
             </div>
           </Card>
 
-          {/* Tracking History */}
+          {/* Tracking History — from trip logs */}
           <Card className="border-border bg-card">
             <div className="flex items-center justify-between border-b border-border bg-muted/20 px-6 py-4">
               <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                Activity Logs
+                Activity Logs {shipment.trip ? `— ${shipment.trip.name}` : ""}
               </h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 gap-2 text-[10px] font-bold uppercase tracking-wider text-primary hover:bg-primary/5"
-                onClick={() => setLogSheetOpen(true)}
-              >
-                <Plus size={14} />
-                Add Entry
-              </Button>
+              {shipment.tripId && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 gap-2 text-[10px] font-bold uppercase tracking-wider text-primary hover:bg-primary/5"
+                  onClick={() => setLogSheetOpen(true)}
+                >
+                  <Plus size={14} />
+                  Add Entry
+                </Button>
+              )}
             </div>
             <div className="px-8 py-10">
               <div className="space-y-0">
-                {shipment.logs.length === 0 ? (
+                {!shipment.trip?.logs || shipment.trip.logs.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-10 text-center">
                     <div className="mb-4 h-12 w-12 rounded-full bg-muted/10 p-3 text-muted-foreground/30">
                       <HugeiconsIcon icon={TruckIcon} size={24} />
                     </div>
                     <p className="text-sm font-medium text-muted-foreground">
-                      No activity logs recorded yet.
+                      {shipment.tripId
+                        ? "No activity logs recorded for this trip yet."
+                        : "This shipment is not assigned to a trip."}
                     </p>
                   </div>
                 ) : (
-                  shipment.logs.map((log, index) => (
+                  shipment.trip.logs.map((log, index) => (
                     <div key={log.id} className="group relative flex gap-6 pb-10 last:pb-0">
-                      {/* Vertical Line */}
-                      {index < shipment.logs.length - 1 && (
+                      {index < (shipment.trip?.logs?.length ?? 0) - 1 && (
                         <div className="absolute left-[9px] top-[26px] h-[calc(100%-16px)] w-[2px] bg-border group-hover:bg-primary/20 transition-colors" />
                       )}
-
-                      {/* Dot */}
                       <div className={cn(
                         "relative z-10 mt-1.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all",
                         index === 0 ? "border-primary bg-primary shadow-[0_0_10px_rgba(var(--primary),0.3)]" : "border-border bg-background group-hover:border-primary/40"
                       )}>
                         {index === 0 && <div className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />}
                       </div>
-
                       <div className="flex-1 space-y-2">
                         <div className="flex items-center justify-between">
                           <p className={cn(
@@ -509,12 +523,12 @@ export default function ShipmentDetailPage() {
                             {getStatusDisplay(log.status)}
                           </p>
                           <p className="text-[10px] font-medium text-muted-foreground tabular-nums">
-                            {new Date(log.timestamp).toLocaleString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              hour: 'numeric',
-                              minute: '2-digit',
-                              hour12: true
+                            {new Date(log.timestamp).toLocaleString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              hour: "numeric",
+                              minute: "2-digit",
+                              hour12: true,
                             })}
                           </p>
                         </div>
@@ -524,9 +538,7 @@ export default function ShipmentDetailPage() {
                               {log.location}
                             </p>
                           )}
-                          <p className="text-xs/relaxed text-muted-foreground">
-                            {log.message}
-                          </p>
+                          <p className="text-xs/relaxed text-muted-foreground">{log.message}</p>
                         </div>
                       </div>
                     </div>
@@ -607,10 +619,10 @@ export default function ShipmentDetailPage() {
         </div>
       </div>
 
-      <AddShipmentLogSheet
+      <AddTripLogSheet
         open={logSheetOpen}
         onOpenChange={setLogSheetOpen}
-        shipmentId={shipmentId}
+        tripId={shipment.tripId ?? ""}
       />
 
       <CreateShipmentSheet

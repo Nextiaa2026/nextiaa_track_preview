@@ -8,15 +8,8 @@ import {
   wizardStepIndex,
   type WizardStep,
 } from "./shipment-wizard-constants";
-import { fr } from "@/lib/i18n/fr";
+import { useTranslations } from "next-intl";
 
-const STEP_TITLE: Record<WizardStep, string> = {
-  sender: fr.forms.shipmentWizard.stepSender,
-  receiver: fr.forms.shipmentWizard.stepReceiver,
-  items: fr.forms.shipmentWizard.stepCargo,
-  review: fr.forms.shipmentWizard.stepReview,
-  complete: fr.forms.shipmentWizard.stepDone,
-};
 
 type Props = {
   step: WizardStep;
@@ -29,6 +22,15 @@ export function ShipmentWizardStepper({
   onGoToStep,
   isEdit = false,
 }: Props) {
+  const sw = useTranslations("forms.shipmentWizard");
+
+  const stepTitle: Record<WizardStep, string> = {
+    sender: sw("stepSender"),
+    receiver: sw("stepReceiver"),
+    items: sw("stepCargo"),
+    review: sw("stepReview"),
+    complete: sw("stepDone"),
+  };
   const stepsMeta = useMemo(
     () =>
       isEdit
@@ -45,7 +47,7 @@ export function ShipmentWizardStepper({
   return (
     <div className="shrink-0 border-b border-border bg-muted/20 px-6 py-4">
       <nav
-        aria-label={fr.forms.shipmentWizard.stepsNavAria}
+        aria-label={sw("stepsNavAria")}
         className="mx-auto max-w-2xl"
       >
         <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8">
@@ -94,7 +96,7 @@ export function ShipmentWizardStepper({
                         : "text-muted-foreground group-hover:text-foreground",
                     )}
                   >
-                    {STEP_TITLE[s.id]}
+                     {stepTitle[s.id]}
                   </span>
                 </button>
                 {i < stepsMeta.length - 1 && (

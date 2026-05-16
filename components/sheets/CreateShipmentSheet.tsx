@@ -25,7 +25,7 @@ import {
   useUpdateShipment,
   useShipment,
   useCreateReceipt,
-  useVessels,
+  useTrips,
 } from "@/hooks/useShipments";
 import type { Shipment, ShipmentReceipt } from "@/services/shipment.service";
 import {
@@ -60,7 +60,8 @@ import {
   wizardStepIndex,
   type WizardStep,
 } from "@/components/shipment-form/shipment-wizard-constants";
-import { fr } from "@/lib/i18n/fr";
+import { useTranslations } from "next-intl";
+import { useSettings } from "@/providers/SettingsProvider";
 
 /**
  * Match what we send to the API: in “existing customer” mode the form can still
@@ -102,18 +103,13 @@ export function CreateShipmentSheet({
   mode = "create",
   shipmentId,
 }: CreateShipmentSheetProps) {
+  const { settings } = useSettings();
   const [step, setStep] = useState<WizardStep>("sender");
   const stepRef = useRef<WizardStep>(step);
   stepRef.current = step;
 
   const { data: customersData } = useCustomers(1, 100);
   const customers = useMemo(() => customersData?.data || [], [customersData]);
-
-  const { data: vesselsForReviewData } = useVessels(1, 100, "");
-  const vesselsForReview = useMemo(
-    () => vesselsForReviewData?.data ?? [],
-    [vesselsForReviewData],
-  );
 
   const { mutate: createShipment, isPending: isCreating } = useCreateShipment();
   const { mutate: updateShipment, isPending: isUpdating } = useUpdateShipment();
@@ -188,8 +184,9 @@ export function CreateShipmentSheet({
   );
 
   const isEdit = mode === "edit";
-  const sw = fr.forms.shipmentWizard;
-  const fc = fr.forms.common;
+  const sw = useTranslations("forms.shipmentWizard");
+  const fc = useTranslations("forms.common");
+  const tsw = useTranslations("forms.shipmentWizard");
 
   const closeWizard = useCallback(() => {
     if (pendingShipmentsListRefresh.current && mode === "create") {
@@ -219,11 +216,11 @@ export function CreateShipmentSheet({
         pendingShipmentsListRefresh.current = false;
         setCreatedShipment(null);
         setCachedReceipt(null);
-        setSendCreationEmail(false);
-        setCreateInvoiceAfterCreation(false);
+        setSendCreationEmail(settings.autoNotifyOnCreate);
+        setCreateInvoiceAfterCreation(settings.autoGenerateInvoice);
         reset({
           trackingNumber: generateTrackingNumber(),
-          shipmentType: "international",
+          shipmentType: settings.defaultShipmentType,
           itemName: "",
           itemDescription: "",
           itemWeight: "",
@@ -244,10 +241,11 @@ export function CreateShipmentSheet({
     startTransition(() => {
       reset({
         trackingNumber: existingShipment.trackingNumber,
+        chassisNumber: existingShipment.chassisNumber,
         shipmentType: existingShipment.shipmentType ?? "international",
         senderId: existingShipment.sender.id,
         receiverId: existingShipment.receiver.id,
-        vesselId: existingShipment.vesselId ?? undefined,
+        tripId: existingShipment.tripId ?? undefined,
         itemName: existingShipment.itemName,
         itemDescription: existingShipment.itemDescription ?? "",
         itemWeight: existingShipment.itemWeight ?? "",
@@ -354,10 +352,10 @@ export function CreateShipmentSheet({
     try {
       const receipt = await ensureReceipt(createdShipment.id);
       if (!openPrintHtml(buildReceiptHtml(receipt))) {
-        toast.error(sw.toastPopupsReceipt);
+        toast.error(sw("toastPopupsReceipt"));
       }
     } catch {
-      toast.error(sw.toastReceiptFail);
+      toast.error(sw("toastReceiptFail"));
     }
   };
 
@@ -366,10 +364,10 @@ export function CreateShipmentSheet({
     try {
       const receipt = await ensureReceipt(createdShipment.id);
       if (!openPrintHtml(buildWaybillHtml(receipt))) {
-        toast.error(sw.toastPopupsWaybill);
+        toast.error(sw("toastPopupsWaybill"));
       }
     } catch {
-      toast.error(sw.toastWaybillFail);
+      toast.error(sw("toastWaybillFail"));
     }
   };
 
@@ -378,10 +376,10 @@ export function CreateShipmentSheet({
     try {
       const receipt = await ensureReceipt(createdShipment.id);
       if (!openPrintHtml(buildInvoiceHtml(receipt))) {
-        toast.error(sw.toastPopupsInvoice);
+        toast.error(sw("toastPopupsInvoice"));
       }
     } catch {
-      toast.error(sw.toastInvoiceFail);
+      toast.error(sw("toastInvoiceFail"));
     }
   };
 
@@ -409,8 +407,8 @@ export function CreateShipmentSheet({
         .filter(Boolean)
         .slice(0, 3)
         .join(" · ");
-      toast.error(sw.toastCannotRegister, {
-        description: detail || sw.toastFixStepHint,
+      toast.error(sw("toastCannotRegister"), {
+        description: detail || sw("toastFixStepHint"),
       });
       const issues = parsed.error.issues;
       if (issues.some((i) => i.path[0] === "sender")) setStep("sender");
@@ -423,18 +421,19 @@ export function CreateShipmentSheet({
     const submitData: ShipmentInput = parsed.data;
 
     if (isEdit && shipmentId) {
-      const toastId = toast.loading(sw.toastSaving);
+      const toastId = toast.loading(sw("toastSaving"));
       updateShipment(
         {
           id: shipmentId,
           data: {
             trackingNumber: submitData.trackingNumber,
+            chassisNumber: submitData.chassisNumber,
             shipmentType: submitData.shipmentType,
             itemName: submitData.itemName,
             itemDescription: submitData.itemDescription?.trim() || undefined,
             itemWeight: submitData.itemWeight?.trim() || undefined,
             itemDimensions: submitData.itemDimensions?.trim() || undefined,
-            vesselId: submitData.vesselId,
+            tripId: submitData.tripId ?? null,
             itemImage:
               submitData.itemImage?.trim() !== ""
                 ? submitData.itemImage?.trim()
@@ -446,15 +445,15 @@ export function CreateShipmentSheet({
         {
           onSuccess: () => {
             toast.dismiss(toastId);
-            toast.success(sw.toastUpdated);
+            toast.success(sw("toastUpdated"));
             closeWizard();
             onSuccess?.();
           },
           onError: (err) => {
             toast.dismiss(toastId);
-            toast.error(sw.toastUpdateFailTitle, {
+            toast.error(sw("toastUpdateFailTitle"), {
               description:
-                err instanceof Error ? err.message : sw.toastTryAgain,
+                err instanceof Error ? err.message : sw("toastTryAgain"),
             });
           },
         },
@@ -472,11 +471,11 @@ export function CreateShipmentSheet({
       notifyPartiesByEmail: sendCreationEmail,
     };
 
-    const toastId = toast.loading(fc.processing);
+    const toastId = toast.loading(fc("processing"));
     createShipment(requestPayload as ShipmentInput, {
       onSuccess: async (created: Shipment) => {
         toast.dismiss(toastId);
-        toast.success(sw.toastRegistered);
+        toast.success(sw("toastRegistered"));
         pendingShipmentsListRefresh.current = true;
         setCachedReceipt(null);
         setCreatedShipment(created);
@@ -486,17 +485,17 @@ export function CreateShipmentSheet({
           try {
             const receipt = await ensureReceipt(created.id);
             if (!openPrintHtml(buildInvoiceHtml(receipt))) {
-              toast.error(sw.toastPopupsInvoice);
+              toast.error(sw("toastPopupsInvoice"));
             }
           } catch {
-            toast.error(sw.toastInvoiceAfterFail);
+            toast.error(sw("toastInvoiceAfterFail"));
           }
         }
       },
       onError: (err) => {
         toast.dismiss(toastId);
-        toast.error(sw.toastCreateFailTitle, {
-          description: err instanceof Error ? err.message : sw.toastTryAgain,
+        toast.error(sw("toastCreateFailTitle"), {
+          description: err instanceof Error ? err.message : sw("toastTryAgain"),
         });
       },
     });
@@ -514,10 +513,10 @@ export function CreateShipmentSheet({
       >
         <SheetHeader className="px-6 py-5 border-b border-white/5 bg-muted/20">
           <SheetTitle className="text-2xl font-bold tracking-tight">
-            {isEdit ? sw.sheetTitleEdit : sw.sheetTitleNew}
+            {isEdit ? sw("sheetTitleEdit") : sw("sheetTitleNew")}
           </SheetTitle>
           <SheetDescription className="text-sm text-muted-foreground/70">
-            {isEdit ? sw.sheetDescEdit : sw.sheetDescNew}
+            {isEdit ? sw("sheetDescEdit") : sw("sheetDescNew")}
           </SheetDescription>
         </SheetHeader>
 
@@ -527,11 +526,11 @@ export function CreateShipmentSheet({
           {showLoader ? (
             <div className="flex flex-col items-center justify-center gap-3 py-20 text-muted-foreground">
               <Loader2 className="size-8 animate-spin text-primary" />
-              <p className="text-sm">{sw.loadingShipment}</p>
+              <p className="text-sm">{sw("loadingShipment")}</p>
             </div>
           ) : showLoadError ? (
             <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-6 text-center text-sm text-destructive">
-              {sw.loadError}
+              {sw("loadError")}
             </div>
           ) : (
             <FormProvider {...methods}>
@@ -542,17 +541,17 @@ export function CreateShipmentSheet({
                 >
                   <div className="rounded-xl border border-border bg-card p-6 text-center shadow-sm">
                     <p className="text-sm font-medium text-muted-foreground">
-                      {sw.completeTitle}
+                      {sw("completeTitle")}
                     </p>
                     <p className="mt-2 text-xs uppercase tracking-widest text-muted-foreground">
-                      {sw.trackingNumberLabel}
+                      {sw("trackingNumberLabel")}
                     </p>
                     <p className="mt-1 break-all font-mono text-2xl font-semibold tracking-tight text-foreground">
                       {createdShipment.trackingNumber}
                     </p>
                     <p className="mt-3 text-sm text-muted-foreground">
                       <span className="font-medium text-foreground">
-                        {sw.labelItem} :
+                        {sw("labelItem")} :
                       </span>{" "}
                       {createdShipment.itemName || "—"}
                     </p>
@@ -564,7 +563,7 @@ export function CreateShipmentSheet({
                         disabled={isReceiptLoading}
                         onClick={() => void printReceiptFromCache()}
                       >
-                        {sw.printReceipt}
+                        {sw("printReceipt")}
                       </Button>
                       <Button
                         type="button"
@@ -573,7 +572,7 @@ export function CreateShipmentSheet({
                         disabled={isReceiptLoading}
                         onClick={() => void printWaybillFromCache()}
                       >
-                        {sw.printWaybill}
+                        {sw("printWaybill")}
                       </Button>
                       <Button
                         type="button"
@@ -582,11 +581,11 @@ export function CreateShipmentSheet({
                         disabled={isReceiptLoading}
                         onClick={() => void printInvoiceFromCache()}
                       >
-                        {sw.printInvoice}
+                        {sw("printInvoice")}
                       </Button>
                     </div>
                     <p className="mt-4 text-xs text-muted-foreground">
-                      {sw.completeHint}
+                      {sw("completeHint")}
                     </p>
                   </div>
                 </div>
@@ -621,8 +620,6 @@ export function CreateShipmentSheet({
                   >
                     {step === "sender" && (
                       <ShipmentSenderStep
-                        isEdit={isEdit}
-                        existingShipment={existingShipment}
                         customers={customers}
                         senderMode={senderMode}
                         onSenderModeChange={setSenderMode}
@@ -632,8 +629,6 @@ export function CreateShipmentSheet({
                     )}
                     {step === "receiver" && (
                       <ShipmentReceiverStep
-                        isEdit={isEdit}
-                        existingShipment={existingShipment}
                         customers={customers}
                         receiverMode={receiverMode}
                         onReceiverModeChange={setReceiverMode}
@@ -646,73 +641,71 @@ export function CreateShipmentSheet({
                       <div className="rounded-xl border border-border bg-card p-5 md:p-6">
                         <div className="mb-4 border-b border-border pb-4">
                           <h3 className="text-lg font-semibold">
-                            {sw.reviewTitle}
+                            {sw("reviewTitle")}
                           </h3>
                           <p className="text-sm text-muted-foreground">
-                            {sw.reviewSubtitle}
+                            {sw("reviewSubtitle")}
                           </p>
                         </div>
 
                         <div className="space-y-5 text-sm">
                           <div>
                             <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                              {sw.sectionShipment}
+                              {sw("sectionShipment")}
                             </p>
                             <div className="grid gap-2 rounded-lg border border-border bg-muted/20 p-3 md:grid-cols-2">
                               <p>
                                 <span className="font-medium">
-                                  {sw.labelTracking} :
+                                  {sw("labelTracking")} :
                                 </span>{" "}
                                 {watchedValues.trackingNumber || "-"}
                               </p>
                               <p>
                                 <span className="font-medium">
-                                  {sw.labelShipmentType} :
+                                  Châssis :
+                                </span>{" "}
+                                {watchedValues.chassisNumber || "-"}
+                              </p>
+                              <p>
+                                <span className="font-medium">
+                                  {sw("labelShipmentType")} :
                                 </span>{" "}
                                 {watchedValues.shipmentType === "international"
-                                  ? sw.shipmentTypeInternational
+                                  ? sw("shipmentTypeInternational")
                                   : watchedValues.shipmentType === "local"
-                                    ? sw.shipmentTypeLocal
+                                    ? sw("shipmentTypeLocal")
                                     : "-"}
                               </p>
                               <p>
                                 <span className="font-medium">
-                                  {sw.labelItem} :
+                                  {sw("labelItem")} :
                                 </span>{" "}
                                 {watchedValues.itemName || "-"}
                               </p>
                               <p>
                                 <span className="font-medium">
-                                  {sw.labelWeight} :
+                                  {sw("labelWeight")} :
                                 </span>{" "}
                                 {watchedValues.itemWeight || "-"}
                               </p>
                               <p>
                                 <span className="font-medium">
-                                  {sw.labelDimensions} :
+                                  {sw("labelDimensions")} :
                                 </span>{" "}
                                 {watchedValues.itemDimensions || "-"}
                               </p>
                               <p className="md:col-span-2">
                                 <span className="font-medium">
-                                  {sw.labelTransport} :
+                                  Trajet :
                                 </span>{" "}
                                 {(() => {
-                                  const vid = watchedValues.vesselId;
-                                  const v =
-                                    vid != null
-                                      ? vesselsForReview.find(
-                                          (row) => row.id === vid,
-                                        )
-                                      : undefined;
-                                  return v
-                                    ? `${v.name} (${v.imo}) · ${v.type}`
-                                    : "-";
+                                  const tid = watchedValues.tripId;
+                                  return tid ? `ID: ${tid.slice(0, 8)}…` : "—";
                                 })()}
                               </p>
                               <p>
                                 <span className="font-medium">
-                                  {sw.labelShippingCost} :
+                                  {sw("labelShippingCost")} :
                                 </span>{" "}
                                 {typeof watchedValues.shippingCost === "number"
                                   ? `$${(watchedValues.shippingCost / 100).toFixed(2)}`
@@ -720,7 +713,7 @@ export function CreateShipmentSheet({
                               </p>
                               <p>
                                 <span className="font-medium">
-                                  {sw.labelEstimatedDelivery} :
+                                  {sw("labelEstimatedDelivery")} :
                                 </span>{" "}
                                 {watchedValues.estimatedDelivery
                                   ? new Date(
@@ -733,7 +726,7 @@ export function CreateShipmentSheet({
 
                           <div>
                             <p className="mb-2 text-xs font-semibold text-muted-foreground">
-                              {sw.sectionSender}
+                              {sw("sectionSender")}
                             </p>
                             <div className="rounded-lg border border-border bg-muted/20 p-3">
                               {senderMode === "existing" ? (
@@ -773,7 +766,7 @@ export function CreateShipmentSheet({
 
                           <div>
                             <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                              {sw.sectionReceiver}
+                              {sw("sectionReceiver")}
                             </p>
                             <div className="rounded-lg border border-border bg-muted/20 p-3">
                               {receiverMode === "existing" ? (
@@ -813,14 +806,14 @@ export function CreateShipmentSheet({
                           </div>
                           <div className="rounded-lg border border-border bg-muted/20 p-4">
                             <p className="mb-3 text-xs font-semibold text-muted-foreground">
-                              {sw.sectionAfterCreate}
+                              {sw("sectionAfterCreate")}
                             </p>
                             <label className="mb-2 flex items-center gap-2 text-sm">
                               <Checkbox
                                 checked={sendCreationEmail}
                                 onCheckedChange={(v) => setSendCreationEmail(!!v)}
                               />
-                              {sw.emailToParties}
+                              {sw("emailToParties")}
                             </label>
                             <label className="flex items-center gap-2 text-sm">
                               <Checkbox
@@ -829,7 +822,7 @@ export function CreateShipmentSheet({
                                   setCreateInvoiceAfterCreation(!!v)
                                 }
                               />
-                              {sw.generateInvoiceAfter}
+                              {sw("generateInvoiceAfter")}
                             </label>
                           </div>
                         </div>
@@ -846,7 +839,7 @@ export function CreateShipmentSheet({
           <SheetFooter className="p-6 border-t border-white/5 bg-muted/20 flex-row-reverse justify-start gap-3">
             {!isEdit && step === "complete" ? (
               <Button type="button" variant="outline" onClick={closeWizard} className="h-11 rounded-xl">
-                {fc.close}
+                {fc("close")}
               </Button>
             ) : (
               <>
@@ -867,14 +860,14 @@ export function CreateShipmentSheet({
                       {isPending ? (
                         <Loader2 className="size-4 animate-spin" />
                       ) : isEdit ? (
-                        sw.saveChanges
+                        sw("saveChanges")
                       ) : (
-                        sw.registerShipment
+                        sw("registerShipment")
                       )}
                     </Button>
                   ) : (
                     <Button type="button" onClick={() => void nextStep()} className="h-11 rounded-xl px-8 font-semibold">
-                      {fc.next}
+                      {fc("next")}
                       <ArrowRight className="ml-2 size-4" />
                     </Button>
                   )}
@@ -886,11 +879,11 @@ export function CreateShipmentSheet({
                   onClick={step === "sender" ? closeWizard : prevStep}
                 >
                   {step === "sender" ? (
-                    fc.cancel
+                    fc("cancel")
                   ) : (
                     <>
                       <ArrowLeft className="mr-2 size-4" />
-                      {fc.back}
+                      {fc("back")}
                     </>
                   )}
                 </Button>

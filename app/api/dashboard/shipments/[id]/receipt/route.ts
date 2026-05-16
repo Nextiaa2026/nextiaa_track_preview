@@ -39,6 +39,7 @@ export async function POST(
       shipment: {
         id: shipment.id,
         trackingNumber: shipment.trackingNumber,
+        chassisNumber: shipment.chassisNumber,
         itemName: shipment.itemName,
         itemWeight: shipment.itemWeight || "N/A",
         status: shipment.status,

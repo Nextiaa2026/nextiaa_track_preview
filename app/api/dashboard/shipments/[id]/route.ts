@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { shipments } from "@/db/schema";
+import { shipments, trips } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
@@ -21,27 +21,18 @@ export async function GET(
       with: {
         sender: true,
         receiver: true,
-        vessel: true,
-        logs: {
-          orderBy: (logs, { asc }) => [asc(logs.timestamp)],
-        },
+        trip: { with: { vessel: true, logs: { orderBy: (l, { desc }) => [desc(l.timestamp)] } } },
       },
     });
 
     if (!shipment) {
-      return NextResponse.json(
-        { error: "Shipment not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Shipment not found" }, { status: 404 });
     }
 
     return NextResponse.json({ shipment });
   } catch (error) {
     console.error("Get shipment error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -61,24 +52,38 @@ export async function PATCH(
     const { shipmentPatchSchema } = await import("@/lib/validations");
     const validatedData = shipmentPatchSchema.parse(body);
 
-    const patchEntries = Object.entries(validatedData).filter(
-      ([, value]) => value !== undefined,
-    );
+    let newStatus: string | undefined = undefined;
+    if (validatedData.tripId !== undefined) {
+      if (validatedData.tripId) {
+        const trip = await db.query.trips.findFirst({
+          where: eq(trips.id, validatedData.tripId),
+        });
+        if (trip) {
+          newStatus = trip.status;
+        }
+      } else {
+         // If detached, keep current status or reset to pending? 
+         // For now, only sync if trip is provided.
+      }
+    }
 
-    const updatedShipment = await db
+    const patchData: Record<string, unknown> = {
+      ...validatedData,
+      updatedAt: new Date(),
+    };
+
+    if (newStatus && !validatedData.status) {
+      patchData.status = newStatus;
+    }
+
+    const [updatedShipment] = await db
       .update(shipments)
-      .set({
-        ...(Object.fromEntries(patchEntries) as Record<string, unknown>),
-        updatedAt: new Date(),
-      })
+      .set(patchData)
       .where(eq(shipments.id, id))
       .returning();
 
-    if (updatedShipment.length === 0) {
-      return NextResponse.json(
-        { error: "Shipment not found" },
-        { status: 404 },
-      );
+    if (!updatedShipment) {
+      return NextResponse.json({ error: "Shipment not found" }, { status: 404 });
     }
 
     const shipment = await db.query.shipments.findFirst({
@@ -86,10 +91,7 @@ export async function PATCH(
       with: {
         sender: true,
         receiver: true,
-        vessel: true,
-        logs: {
-          orderBy: (logs, { asc }) => [asc(logs.timestamp)],
-        },
+        trip: { with: { vessel: true, logs: { orderBy: (l, { desc }) => [desc(l.timestamp)] } } },
       },
     });
 
@@ -101,7 +103,7 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
@@ -112,24 +114,18 @@ export async function DELETE(
 
     const { id } = await params;
 
-    const deletedShipment = await db
+    const [deleted] = await db
       .delete(shipments)
       .where(eq(shipments.id, id))
       .returning();
 
-    if (deletedShipment.length === 0) {
-      return NextResponse.json(
-        { error: "Shipment not found" },
-        { status: 404 },
-      );
+    if (!deleted) {
+      return NextResponse.json({ error: "Shipment not found" }, { status: 404 });
     }
 
     return NextResponse.json({ message: "Shipment deleted successfully" });
   } catch (error) {
     console.error("Delete shipment error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

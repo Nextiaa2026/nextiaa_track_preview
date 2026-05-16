@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useInvoices } from "@/hooks/useShipments";
+import { useDebounce } from "@/hooks/use-debounce";
 import type { Invoice } from "@/services/shipment.service";
 import { format } from "date-fns";
 import {
@@ -54,10 +55,12 @@ function invoiceStatusClass(status: string): string {
 export default function InvoicesPage() {
   const t = useTranslations("pages.invoices");
   const tc = useTranslations("forms.common");
+  const tis = useTranslations("forms.common.invoiceStatus");
   const router = useRouter();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 400);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -66,7 +69,7 @@ export default function InvoicesPage() {
   const { data: paginatedData, isLoading } = useInvoices(
     page,
     pageSize,
-    search,
+    debouncedSearch,
     statusFilter === "all" ? undefined : statusFilter,
     startDate,
     endDate,
@@ -87,7 +90,7 @@ export default function InvoicesPage() {
             <div className="flex flex-col">
               <span className="text-black font-medium leading-none mb-1">{row.original.invoiceNumber}</span>
               <span className="text-[10px] text-gray-400 font-normal uppercase tracking-wider">
-                Shipment #{row.original.shipmentId}
+                {t("shipmentRef", { id: row.original.shipmentId })}
               </span>
             </div>
           </div>
@@ -144,7 +147,7 @@ export default function InvoicesPage() {
               row.original.status,
             )}`}
           >
-            {row.original.status}
+            {tis(row.original.status.toLowerCase())}
           </span>
         ),
       },
@@ -206,8 +209,7 @@ export default function InvoicesPage() {
         onSearchChange={(value) => {
           setSearch(value);
           setPage(1);
-        }}
-        searchPlaceholder={t("searchPlaceholder")}
+        }}        searchPlaceholder={t("searchPlaceholder")}
         filters={
           <div className="flex items-center gap-2">
             <Select
@@ -223,7 +225,7 @@ export default function InvoicesPage() {
               <SelectContent>
                 {STATUS_OPTIONS.map((opt) => (
                   <SelectItem key={opt} value={opt}>
-                    {opt === "all" ? t("allStatuses") : opt.charAt(0).toUpperCase() + opt.slice(1)}
+                    {opt === "all" ? t("allStatuses") : tis(opt)}
                   </SelectItem>
                 ))}
               </SelectContent>

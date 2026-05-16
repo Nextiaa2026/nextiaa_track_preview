@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { shipmentSchema } from "@/lib/validations";
 import { db } from "@/db";
-import {
-  shipments,
-  shipmentLogs,
-  customers,
-  invoices,
-  vessels,
-} from "@/db/schema";
+import { shipments, customers, invoices, trips } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { count, or, ilike, sql, and, gte, lte, eq, SQL } from "drizzle-orm";
 import { emailService } from "@/services/email.service";
@@ -22,73 +16,69 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const searchParams = request.nextUrl.searchParams;
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
-    const pageSize = Math.min(
-      100,
-      parseInt(searchParams.get("pageSize") || "10"),
-    );
-    const search = searchParams.get("search") || "";
-    const startDate = searchParams.get("startDate");
-    const endDate = searchParams.get("endDate");
+    const sp = request.nextUrl.searchParams;
+    const page = Math.max(1, parseInt(sp.get("page") || "1"));
+    const pageSize = Math.min(100, parseInt(sp.get("pageSize") || "10"));
+    const search = sp.get("search") || "";
+    const startDate = sp.get("startDate");
+    const endDate = sp.get("endDate");
+    const tripId = sp.get("tripId") || undefined;
     const offset = (page - 1) * pageSize;
 
     const conditions: SQL[] = [];
 
     if (search) {
-      conditions.push(or(
-        ilike(shipments.trackingNumber, `%${search}%`),
-        ilike(shipments.itemName, `%${search}%`),
-        sql`EXISTS (SELECT 1 FROM ${customers} c WHERE c.id = ${shipments.senderId} AND c.name ILIKE ${`%${search}%`})`,
-        sql`EXISTS (SELECT 1 FROM ${customers} c WHERE c.id = ${shipments.receiverId} AND c.name ILIKE ${`%${search}%`})`
-      ) as SQL);
+      conditions.push(
+        or(
+          ilike(shipments.trackingNumber, `%${search}%`),
+          ilike(shipments.chassisNumber, `%${search}%`),
+          ilike(shipments.itemName, `%${search}%`),
+          sql`EXISTS (SELECT 1 FROM ${customers} c WHERE c.id = ${shipments.senderId} AND c.name ILIKE ${`%${search}%`})`,
+          sql`EXISTS (SELECT 1 FROM ${customers} c WHERE c.id = ${shipments.receiverId} AND c.name ILIKE ${`%${search}%`})`,
+        ) as SQL,
+      );
     }
-    
+
     if (startDate) conditions.push(gte(shipments.createdAt, new Date(startDate)));
     if (endDate) conditions.push(lte(shipments.createdAt, new Date(endDate)));
+    if (tripId) {
+      if (tripId === "none") {
+        conditions.push(sql`${shipments.tripId} IS NULL`);
+      } else {
+        conditions.push(eq(shipments.tripId, tripId));
+      }
+    }
 
-    const whereClause = and(...conditions);
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const rows = await db
-      .select({
-        shipment: shipments,
-        sender: customers,
-        receiver: customers,
-        vessel: vessels,
-      })
+    const data = await db.query.shipments.findMany({
+      where: whereClause,
+      with: {
+        sender: true,
+        receiver: true,
+        trip: { with: { vessel: true } },
+      },
+      orderBy: (s, { desc }) => [desc(s.createdAt)],
+      limit: pageSize,
+      offset,
+    });
+
+    const [countResult] = await db
+      .select({ value: count() })
       .from(shipments)
-      .leftJoin(customers, eq(shipments.senderId, customers.id))
-      .leftJoin(sql`${customers} as receiver`, eq(shipments.receiverId, sql`receiver.id`))
-      .leftJoin(vessels, eq(shipments.vesselId, vessels.id))
-      .where(whereClause)
-      .orderBy(sql`${shipments.createdAt} DESC`)
-      .limit(pageSize)
-      .offset(offset);
-
-    const data = rows.map(row => ({
-      ...row.shipment,
-      sender: row.sender,
-      receiver: row.receiver,
-      vessel: row.vessel
-    }));
-
-    const [countResult] = await db.select({ value: count() }).from(shipments).where(whereClause);
+      .where(whereClause);
     const total = Number(countResult.value);
-    const totalPages = Math.ceil(total / pageSize);
 
     return NextResponse.json({
       data,
       total,
       page,
       pageSize,
-      totalPages,
+      totalPages: Math.ceil(total / pageSize),
     });
   } catch (error) {
     console.error("Get shipments error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -111,10 +101,7 @@ export async function POST(request: NextRequest) {
       const result = await db
         .insert(customers)
         .values(validatedData.sender)
-        .onConflictDoUpdate({
-          target: customers.email,
-          set: validatedData.sender,
-        })
+        .onConflictDoUpdate({ target: customers.email, set: validatedData.sender })
         .returning();
       senderId = result[0].id;
     }
@@ -124,10 +111,7 @@ export async function POST(request: NextRequest) {
       const result = await db
         .insert(customers)
         .values(validatedData.receiver)
-        .onConflictDoUpdate({
-          target: customers.email,
-          set: validatedData.receiver,
-        })
+        .onConflictDoUpdate({ target: customers.email, set: validatedData.receiver })
         .returning();
       receiverId = result[0].id;
     }
@@ -139,36 +123,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const newShipmentResult = await db
+    let initialStatus = "pending";
+    if (validatedData.tripId) {
+      const trip = await db.query.trips.findFirst({
+        where: eq(trips.id, validatedData.tripId),
+      });
+      if (trip) {
+        initialStatus = trip.status;
+      }
+    }
+
+    const [newShipment] = await db
       .insert(shipments)
       .values({
         trackingNumber: validatedData.trackingNumber,
+        chassisNumber: validatedData.chassisNumber,
         senderId,
         receiverId,
+        tripId: validatedData.tripId ?? null,
         shipmentType: validatedData.shipmentType,
         itemName: validatedData.itemName,
         itemDescription: validatedData.itemDescription,
         itemWeight: validatedData.itemWeight,
         itemDimensions: validatedData.itemDimensions,
-        vesselId: validatedData.vesselId,
         itemImage: validatedData.itemImage,
         shippingCost: validatedData.shippingCost,
         estimatedDelivery: validatedData.estimatedDelivery,
-        status: "pending",
+        status: initialStatus,
       })
       .returning();
 
-    const newShipment = newShipmentResult[0];
     const shipmentId = newShipment.id;
 
-    // Create initial log entry
-    await db.insert(shipmentLogs).values({
-      shipmentId,
-      status: "pending",
-      location: "En attente",
-      message: "Expédition créée et en attente d'enlèvement",
-    });
-
+    // Auto-generate invoice
     const issueDate = new Date();
     const dueDate = new Date(issueDate);
     dueDate.setDate(dueDate.getDate() + 14);
@@ -189,27 +176,24 @@ export async function POST(request: NextRequest) {
     if (notifyPartiesByEmail) {
       try {
         const [sender, receiver] = await Promise.all([
-          db.query.customers.findFirst({
-            where: eq(customers.id, senderId),
-          }),
-          db.query.customers.findFirst({
-            where: eq(customers.id, receiverId),
-          }),
+          db.query.customers.findFirst({ where: eq(customers.id, senderId) }),
+          db.query.customers.findFirst({ where: eq(customers.id, receiverId) }),
         ]);
 
         if (sender && receiver) {
           const receipt = {
             receiptNumber: `RCPT-${shipmentId}`,
             issuedAt: new Date().toISOString(),
-              shipment: {
-                id: shipmentId,
-                trackingNumber: newShipment.trackingNumber,
-                itemName: newShipment.itemName,
-                itemWeight: newShipment.itemWeight || "N/A",
-                status: newShipment.status,
-                createdAt: newShipment.createdAt.toISOString(),
-                shippingCost: newShipment.shippingCost,
-              },
+            shipment: {
+              id: shipmentId,
+              trackingNumber: newShipment.trackingNumber,
+              chassisNumber: newShipment.chassisNumber,
+              itemName: newShipment.itemName,
+              itemWeight: newShipment.itemWeight || "N/A",
+              status: newShipment.status,
+              createdAt: newShipment.createdAt.toISOString(),
+              shippingCost: newShipment.shippingCost,
+            },
             sender,
             receiver,
           };

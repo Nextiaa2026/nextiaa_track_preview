@@ -248,7 +248,7 @@ export default function CustomersPage() {
         actions={
           <Button
             onClick={() => setSheetOpen(true)}
-            className="h-10 rounded-lg px-4 font-medium"
+            className="h-10 rounded-lg px-4 font-medium w-full sm:w-auto"
           >
             {t("addButton")}
           </Button>

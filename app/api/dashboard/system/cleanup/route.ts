@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
-import { customers, shipmentLogs, shipments, users, vessels } from "@/db/schema";
+import { customers, tripLogs, trips, shipments, users, vessels } from "@/db/schema";
 import { ne } from "drizzle-orm";
 
 export async function POST() {
@@ -12,8 +12,10 @@ export async function POST() {
     }
 
     await db.transaction(async (tx) => {
-      await tx.delete(shipmentLogs);
+      // Order matters: cascade-dependent tables first
       await tx.delete(shipments);
+      await tx.delete(tripLogs);
+      await tx.delete(trips);
       await tx.delete(customers);
       await tx.delete(vessels);
       await tx.delete(users).where(ne(users.role, "admin"));

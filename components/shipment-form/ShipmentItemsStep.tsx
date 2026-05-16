@@ -16,30 +16,64 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { VesselSearchCombobox } from "@/components/shipment-form/vessel-search-combobox";
-import { fr } from "@/lib/i18n/fr";
+import { TripSearchCombobox } from "@/components/shipment-form/trip-search-combobox";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
+import {
+  loadSystemSettings,
+  currencySymbol,
+  isSuffixCurrency,
+  formatCurrency,
+} from "@/lib/utils/currency";
 
+// Shipment types are technically IDs, labels come from translations
 const SHIPMENT_TYPE_OPTIONS = ["international", "local"] as const;
 
-const SHIPMENT_TYPE_LABEL: Record<
-  (typeof SHIPMENT_TYPE_OPTIONS)[number],
-  string
-> = {
-  international: fr.forms.shipmentWizard.shipmentTypeInternational,
-  local: fr.forms.shipmentWizard.shipmentTypeLocal,
-};
-
 export function ShipmentItemsStep() {
-  const it = fr.forms.items;
+  const t = useTranslations("forms.items");
+  const tw = useTranslations("forms.shipmentWizard");
+  const it = {
+    tracking: t("tracking"),
+    chassisNumber: t("chassisNumber"),
+    chassisNumberPh: t("chassisNumberPh"),
+    itemTitle: t("itemTitle"),
+    itemTitlePh: t("itemTitlePh"),
+    description: t("description"),
+    descriptionPh: t("descriptionPh"),
+    weight: t("weight"),
+    weightPh: t("weightPh"),
+    dimensions: t("dimensions"),
+    dimensionsPh: t("dimensionsPh"),
+    shippingCost: t("shippingCost"),
+    shipmentType: t("shipmentType"),
+    shipmentTypePlaceholder: t("shipmentTypePlaceholder"),
+    estimatedDelivery: t("estimatedDelivery"),
+    datePlaceholder: t("datePlaceholder"),
+    trip: t("trip"),
+  };
+
+  const SHIPMENT_TYPE_LABEL: Record<(typeof SHIPMENT_TYPE_OPTIONS)[number], string> = {
+    international: tw("shipmentTypeInternational"),
+    local: tw("shipmentTypeLocal"),
+  };
+
+  const systemSettings = loadSystemSettings();
+  const currency = systemSettings.currency || "EUR";
+  const sym = currencySymbol(currency);
+  const isEur = isSuffixCurrency(currency);
+
   const {
     register,
     control,
+    watch,
     formState: { errors },
   } = useFormContext<ShipmentFormValues>();
 
+  const shippingCostValue = watch("shippingCost");
+
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      {/* Tracking Number */}
       <Field className="md:col-span-2" data-invalid={!!errors.trackingNumber}>
         <FieldLabel htmlFor="ship-tracking">{it.tracking}</FieldLabel>
         <Input
@@ -47,11 +81,25 @@ export function ShipmentItemsStep() {
           aria-invalid={!!errors.trackingNumber}
           {...register("trackingNumber")}
         />
-        {errors.trackingNumber && (
-          <FieldError>{errors.trackingNumber.message}</FieldError>
-        )}
+        {errors.trackingNumber && <FieldError>{errors.trackingNumber.message}</FieldError>}
       </Field>
 
+      {/* Chassis Number */}
+      <Field className="md:col-span-2" data-invalid={!!errors.chassisNumber}>
+        <FieldLabel htmlFor="ship-chassis">
+          {it.chassisNumber}
+          <span className="ml-1 text-destructive">*</span>
+        </FieldLabel>
+        <Input
+          id="ship-chassis"
+          placeholder={it.chassisNumberPh}
+          aria-invalid={!!errors.chassisNumber}
+          {...register("chassisNumber")}
+        />
+        {errors.chassisNumber && <FieldError>{errors.chassisNumber.message}</FieldError>}
+      </Field>
+
+      {/* Item Name */}
       <Field className="md:col-span-2" data-invalid={!!errors.itemName}>
         <FieldLabel htmlFor="ship-item-name">{it.itemTitle}</FieldLabel>
         <Input
@@ -60,11 +108,10 @@ export function ShipmentItemsStep() {
           aria-invalid={!!errors.itemName}
           {...register("itemName")}
         />
-        {errors.itemName && (
-          <FieldError>{errors.itemName.message}</FieldError>
-        )}
+        {errors.itemName && <FieldError>{errors.itemName.message}</FieldError>}
       </Field>
 
+      {/* Description */}
       <Field className="md:col-span-2" data-invalid={!!errors.itemDescription}>
         <FieldLabel htmlFor="ship-item-desc">{it.description}</FieldLabel>
         <textarea
@@ -74,11 +121,10 @@ export function ShipmentItemsStep() {
           {...register("itemDescription")}
           className="flex min-h-28 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 aria-invalid:border-destructive aria-invalid:ring-destructive/20"
         />
-        {errors.itemDescription && (
-          <FieldError>{errors.itemDescription.message}</FieldError>
-        )}
+        {errors.itemDescription && <FieldError>{errors.itemDescription.message}</FieldError>}
       </Field>
 
+      {/* Weight */}
       <Field data-invalid={!!errors.itemWeight}>
         <FieldLabel htmlFor="ship-weight">{it.weight}</FieldLabel>
         <Input
@@ -87,11 +133,10 @@ export function ShipmentItemsStep() {
           aria-invalid={!!errors.itemWeight}
           {...register("itemWeight")}
         />
-        {errors.itemWeight && (
-          <FieldError>{errors.itemWeight.message}</FieldError>
-        )}
+        {errors.itemWeight && <FieldError>{errors.itemWeight.message}</FieldError>}
       </Field>
 
+      {/* Dimensions */}
       <Field data-invalid={!!errors.itemDimensions}>
         <FieldLabel htmlFor="ship-dims">{it.dimensions}</FieldLabel>
         <Input
@@ -100,59 +145,71 @@ export function ShipmentItemsStep() {
           aria-invalid={!!errors.itemDimensions}
           {...register("itemDimensions")}
         />
-        {errors.itemDimensions && (
-          <FieldError>{errors.itemDimensions.message}</FieldError>
-        )}
+        {errors.itemDimensions && <FieldError>{errors.itemDimensions.message}</FieldError>}
       </Field>
 
+      {/* Shipping Cost — whole units, currency-aware symbol */}
       <Field data-invalid={!!errors.shippingCost}>
-        <FieldLabel htmlFor="ship-cost">{it.shippingCents}</FieldLabel>
-        <Input
-          id="ship-cost"
-          type="number"
-          placeholder={it.shippingCentsPh}
-          aria-invalid={!!errors.shippingCost}
-          {...register("shippingCost", { valueAsNumber: true })}
-        />
-        {errors.shippingCost && (
-          <FieldError>{errors.shippingCost.message}</FieldError>
+        <FieldLabel htmlFor="ship-cost">
+          {it.shippingCost}{" "}
+          <span className="text-muted-foreground font-normal text-xs">({currency})</span>
+        </FieldLabel>
+        <div className="relative">
+          {!isEur && (
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground select-none">
+              {sym}
+            </span>
+          )}
+          <Input
+            id="ship-cost"
+            type="number"
+            min={0}
+            step={1}
+            placeholder="0"
+            aria-invalid={!!errors.shippingCost}
+            className={cn(!isEur && "pl-8", isEur && "pr-12")}
+            {...register("shippingCost", { valueAsNumber: true })}
+          />
+          {isEur && (
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground select-none">
+              {sym}
+            </span>
+          )}
+        </div>
+        {typeof shippingCostValue === "number" && !isNaN(shippingCostValue) && shippingCostValue > 0 && (
+          <p className="mt-1 text-xs text-muted-foreground">
+            {formatCurrency(shippingCostValue, currency)}
+          </p>
         )}
+        {errors.shippingCost && <FieldError>{errors.shippingCost.message}</FieldError>}
       </Field>
 
+      {/* Shipment Type */}
       <Field data-invalid={!!errors.shipmentType}>
         <FieldLabel htmlFor="ship-shipment-type">{it.shipmentType}</FieldLabel>
         <Controller
           control={control}
           name="shipmentType"
           render={({ field }) => (
-            <Select
-              value={field.value ?? "international"}
-              onValueChange={field.onChange}
-            >
-              <SelectTrigger 
-                id="ship-shipment-type" 
-                className={cn(
-                  "w-full justify-between h-11 rounded-xl",
-                  errors.shipmentType && "border-destructive"
-                )}
+            <Select value={field.value ?? "international"} onValueChange={field.onChange}>
+              <SelectTrigger
+                id="ship-shipment-type"
+                className={cn("w-full justify-between h-11 rounded-xl", errors.shipmentType && "border-destructive")}
               >
                 <SelectValue placeholder={it.shipmentTypePlaceholder} />
               </SelectTrigger>
               <SelectContent>
                 {SHIPMENT_TYPE_OPTIONS.map((opt) => (
-                  <SelectItem key={opt} value={opt}>
-                    {SHIPMENT_TYPE_LABEL[opt]}
-                  </SelectItem>
+                  <SelectItem key={opt} value={opt}>{SHIPMENT_TYPE_LABEL[opt]}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           )}
         />
-        {errors.shipmentType && (
-          <FieldError>{errors.shipmentType.message}</FieldError>
-        )}
+        {errors.shipmentType && <FieldError>{errors.shipmentType.message}</FieldError>}
       </Field>
 
+      {/* Estimated Delivery */}
       <Field data-invalid={!!errors.estimatedDelivery}>
         <FieldLabel htmlFor="ship-delivery">{it.estimatedDelivery}</FieldLabel>
         <Controller
@@ -167,30 +224,25 @@ export function ShipmentItemsStep() {
             />
           )}
         />
-        {errors.estimatedDelivery && (
-          <FieldError>{errors.estimatedDelivery.message}</FieldError>
-        )}
+        {errors.estimatedDelivery && <FieldError>{errors.estimatedDelivery.message}</FieldError>}
       </Field>
 
-      <Field className="md:col-span-2" data-invalid={!!errors.vesselId}>
-        <FieldLabel htmlFor="vessel-combobox">{it.transport}</FieldLabel>
+      {/* Trip (optional) */}
+      <Field className="md:col-span-2" data-invalid={!!errors.tripId}>
+        <FieldLabel htmlFor="trip-combobox">{it.trip}</FieldLabel>
         <Controller
           control={control}
-          name="vesselId"
+          name="tripId"
           render={({ field }) => (
-            <VesselSearchCombobox
-              id="vessel-combobox"
+            <TripSearchCombobox
+              id="trip-combobox"
               value={field.value ?? undefined}
-              onChange={(id) => {
-                field.onChange(id ?? undefined);
-              }}
-              error={!!errors.vesselId}
+              onChange={(id) => field.onChange(id ?? undefined)}
+              error={!!errors.tripId}
             />
           )}
         />
-        {errors.vesselId && (
-          <FieldError>{errors.vesselId.message}</FieldError>
-        )}
+        {errors.tripId && <FieldError>{errors.tripId.message}</FieldError>}
       </Field>
     </div>
   );

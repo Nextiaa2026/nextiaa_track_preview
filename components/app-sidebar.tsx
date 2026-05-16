@@ -10,6 +10,7 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -20,7 +21,8 @@ import {
   MapsIcon,
   CargoShipIcon,
   Invoice01Icon,
-  Settings01Icon
+  Settings01Icon,
+  Navigation03Icon,
 } from "@hugeicons/core-free-icons";
 import { useTranslations } from "next-intl";
 
@@ -28,9 +30,13 @@ import { Logo } from "@/components/logo";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const t = useTranslations("sidebar");
-  
+  const { setOpenMobile, isMobile } = useSidebar();
 
-
+  const handleLogoClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   const navMain = [
     {
@@ -59,6 +65,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: <HugeiconsIcon icon={CargoShipIcon} strokeWidth={2} />,
     },
     {
+      title: t("trips"),
+      url: "/dashboard/trips",
+      icon: <HugeiconsIcon icon={Navigation03Icon} strokeWidth={2} />,
+    },
+    {
       title: t("activityLogs"),
       url: "/dashboard/logs",
       icon: <HugeiconsIcon icon={ComputerTerminalIcon} strokeWidth={2} />,
@@ -80,8 +91,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <div className="flex items-center gap-3 px-4 py-3 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:justify-center">
-          <Logo showText={true} className="group-data-[collapsible=icon]:hidden" />
-          <Logo showText={false} className="hidden group-data-[collapsible=icon]:flex" />
+          <Logo showText={true} className="group-data-[collapsible=icon]:hidden" onClick={handleLogoClick} />
+          <Logo showText={false} className="hidden group-data-[collapsible=icon]:flex" onClick={handleLogoClick} />
         </div>
       </SidebarHeader>
       <SidebarContent>

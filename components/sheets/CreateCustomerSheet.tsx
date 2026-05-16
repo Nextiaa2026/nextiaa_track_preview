@@ -26,7 +26,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { LocationMapPreview } from "@/components/ui/location-map-preview";
-import { fr } from "@/lib/i18n/fr";
+import { useTranslations } from "next-intl";
 
 interface CreateCustomerSheetProps {
   open: boolean;
@@ -39,10 +39,12 @@ export function CreateCustomerSheet({
   onOpenChange,
   onSuccess,
 }: CreateCustomerSheetProps) {
-  const cs = fr.forms.customerSheet;
-  const p = fr.forms.party;
-  const ad = fr.forms.address;
-  const fc = fr.forms.common;
+  const cs = useTranslations("forms.customerSheet");
+  const p = useTranslations("forms.party");
+  const ad = useTranslations("forms.address");
+  const fc = useTranslations("forms.common");
+  const tsw = useTranslations("forms.shipmentWizard");
+  const tl = useTranslations("forms.login");
   const { mutate: createCustomer, isPending } = useCreateCustomer();
   const [mapCoords, setMapCoords] = useState<{ lat: number; lon: number } | null>(
     null,
@@ -69,12 +71,12 @@ export function CreateCustomerSheet({
   }, [register]);
 
   const onSubmit = (data: CustomerInput) => {
-    const toastId = toast.loading(cs.adding);
+    const toastId = toast.loading(cs("adding"));
 
     createCustomer(data, {
       onSuccess: () => {
         toast.dismiss(toastId);
-        toast.success(cs.success);
+        toast.success(cs("success"));
         reset();
         setMapCoords(null);
         setMapCounty("");
@@ -83,8 +85,8 @@ export function CreateCustomerSheet({
       },
       onError: (err) => {
         toast.dismiss(toastId);
-        toast.error(cs.failTitle, {
-          description: err instanceof Error ? err.message : cs.failGeneric,
+        toast.error(cs("failTitle"), {
+          description: err instanceof Error ? err.message : cs("failGeneric"),
         });
       },
     });
@@ -135,10 +137,10 @@ export function CreateCustomerSheet({
       >
         <SheetHeader className="px-6 py-4 border-b border-gray-100">
           <SheetTitle className="text-xl font-semibold">
-            {cs.title}
+            {cs("title")}
           </SheetTitle>
           <SheetDescription className="text-sm text-muted-foreground mt-1">
-            Gérez les informations de vos clients et partenaires.
+            {cs("description") || "Gérez les informations de vos clients et partenaires."}
           </SheetDescription>
         </SheetHeader>
 
@@ -150,10 +152,10 @@ export function CreateCustomerSheet({
           >
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="customer-name">{p.fullName}</FieldLabel>
+                <FieldLabel htmlFor="customer-name">{p("fullName")}</FieldLabel>
                 <Input
                   id="customer-name"
-                  placeholder={fr.forms.shipmentWizard.placeholderNameSender}
+                  placeholder={tsw("placeholderNameSender")}
                   aria-invalid={!!errors.name}
                   {...register("name")}
                 />
@@ -163,11 +165,11 @@ export function CreateCustomerSheet({
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="customer-email">{fc.email}</FieldLabel>
+                <FieldLabel htmlFor="customer-email">{fc("email")}</FieldLabel>
                 <Input
                   id="customer-email"
                   type="email"
-                  placeholder={fr.forms.login.emailPlaceholder}
+                  placeholder={tl("emailPlaceholder")}
                   aria-invalid={!!errors.email}
                   {...register("email")}
                 />
@@ -177,7 +179,7 @@ export function CreateCustomerSheet({
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="customer-phone">{p.phone}</FieldLabel>
+                <FieldLabel htmlFor="customer-phone">{p("phone")}</FieldLabel>
                 <Input
                   id="customer-phone"
                   placeholder="+237 6XX XXX XXX"
@@ -190,21 +192,21 @@ export function CreateCustomerSheet({
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="address-search">{p.addressSearch}</FieldLabel>
+                <FieldLabel htmlFor="address-search">{p("addressSearch")}</FieldLabel>
                 <AddressAutocomplete
-                  placeholder={ad.placeholderDetailed}
+                  placeholder={ad("placeholderDetailed")}
                   onAddressSelect={applyGeocode}
                 />
                 <FieldDescription>
-                  {ad.customerAutocompleteHint}
+                  {ad("customerAutocompleteHint")}
                 </FieldDescription>
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="customer-address">{p.streetAddress}</FieldLabel>
+                <FieldLabel htmlFor="customer-address">{p("streetAddress")}</FieldLabel>
                 <Input
                   id="customer-address"
-                  placeholder={ad.streetExample}
+                  placeholder={ad("streetExample")}
                   aria-invalid={!!errors.address}
                   {...register("address")}
                 />
@@ -215,7 +217,7 @@ export function CreateCustomerSheet({
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field>
-                  <FieldLabel htmlFor="customer-city">{p.city}</FieldLabel>
+                  <FieldLabel htmlFor="customer-city">{p("city")}</FieldLabel>
                   <Input
                     id="customer-city"
                     placeholder="Douala"
@@ -227,7 +229,7 @@ export function CreateCustomerSheet({
                   )}
                 </Field>
                 <Field>
-                  <FieldLabel htmlFor="customer-state">{p.state}</FieldLabel>
+                  <FieldLabel htmlFor="customer-state">{p("state")}</FieldLabel>
                   <Input
                     id="customer-state"
                     placeholder="Littoral"
@@ -242,11 +244,11 @@ export function CreateCustomerSheet({
 
               <Field>
                 <FieldLabel htmlFor="customer-locality">
-                  {p.areaNeighbourhood}
+                  {p("areaNeighbourhood")}
                 </FieldLabel>
                 <Input
                   id="customer-locality"
-                  placeholder={p.areaPlaceholder}
+                  placeholder={p("areaPlaceholder")}
                   aria-invalid={!!errors.locality}
                   {...register("locality")}
                 />
@@ -255,14 +257,14 @@ export function CreateCustomerSheet({
                 )}
                 {mapCounty ? (
                   <FieldDescription>
-                    {p.countyDistrictLabel} : {mapCounty}
+                    {p("countyDistrictLabel")} : {mapCounty}
                   </FieldDescription>
                 ) : null}
               </Field>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field>
-                  <FieldLabel htmlFor="customer-zip">{p.zipCode}</FieldLabel>
+                  <FieldLabel htmlFor="customer-zip">{p("zipCode")}</FieldLabel>
                   <Input
                     id="customer-zip"
                     placeholder="00000"
@@ -274,7 +276,7 @@ export function CreateCustomerSheet({
                   )}
                 </Field>
                 <Field>
-                  <FieldLabel htmlFor="customer-country">{p.country}</FieldLabel>
+                  <FieldLabel htmlFor="customer-country">{p("country")}</FieldLabel>
                   <Input
                     id="customer-country"
                     placeholder="Cameroun"
@@ -305,10 +307,10 @@ export function CreateCustomerSheet({
                     {isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        {fc.saving}
+                        {fc("saving")}
                       </>
                     ) : (
-                      cs.saveCustomer
+                      cs("saveCustomer")
                     )}
                   </Button>
                   <Button
@@ -321,7 +323,7 @@ export function CreateCustomerSheet({
                       onOpenChange(false);
                     }}
                   >
-                    {fc.cancel}
+                    {fc("cancel")}
                   </Button>
                 </div>
               </Field>

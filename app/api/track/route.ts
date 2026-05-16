@@ -1,50 +1,50 @@
 import { NextRequest, NextResponse } from "next/server";
 import { trackingSchema } from "@/lib/validations";
 import { db } from "@/db";
-import { shipmentLogs, shipments } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { shipments } from "@/db/schema";
+import { eq, or } from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const validatedData = trackingSchema.parse(body);
+    const { trackingNumber } = trackingSchema.parse(body);
 
-    // Find shipment by tracking number
+    // Support lookup by tracking number OR chassis number
     const shipment = await db.query.shipments.findFirst({
-      where: eq(shipments.trackingNumber, validatedData.trackingNumber),
+      where: or(
+        eq(shipments.trackingNumber, trackingNumber),
+        eq(shipments.chassisNumber, trackingNumber),
+      ),
       with: {
         sender: true,
         receiver: true,
-        vessel: true,
-        logs: {
-          orderBy: (logs) => logs.timestamp,
+        trip: {
+          with: {
+            vessel: true,
+            logs: {
+              orderBy: (logs, { desc }) => [desc(logs.timestamp)],
+            },
+          },
         },
       },
     });
 
     if (!shipment) {
-      return NextResponse.json(
-        { error: "Shipment not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Shipment not found" }, { status: 404 });
     }
 
-    // Log each successful client tracking lookup for audit + analytics.
-    await db.insert(shipmentLogs).values({
-      shipmentId: shipment.id,
-      status: "tracking_viewed",
-      location: shipment.logs.at(-1)?.location ?? "Client Portal",
-      message: `Client viewed tracking for ${shipment.trackingNumber}`,
-    });
+    const tripLogs = shipment.trip?.logs ?? [];
 
     return NextResponse.json({
       trackingNumber: shipment.trackingNumber,
+      chassisNumber: shipment.chassisNumber,
       status: shipment.status,
       itemName: shipment.itemName,
       itemDescription: shipment.itemDescription,
       itemImage: shipment.itemImage,
-      vesselName: shipment.vessel?.name,
-      vesselImo: shipment.vessel?.imo,
+      tripName: shipment.trip?.name ?? null,
+      vesselName: shipment.trip?.vessel?.name ?? null,
+      vesselImo: shipment.trip?.vessel?.imo ?? null,
       sender: {
         name: shipment.sender.name,
         email: shipment.sender.email,
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
         email: shipment.receiver.email,
         phone: shipment.receiver.phone,
       },
-      logs: shipment.logs.map((log) => ({
+      logs: tripLogs.map((log) => ({
         id: log.id,
         status: log.status,
         location: log.location,

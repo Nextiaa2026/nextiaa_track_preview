@@ -1,7 +1,7 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import { useShipmentLogs } from "@/hooks/useShipments";
+import { useTripLogs } from "@/hooks/useShipments";
 import {
   Card,
   CardContent,
@@ -10,58 +10,47 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { fr } from "@/lib/i18n/fr";
+import { getStatusDisplay } from "@/lib/utils/shipment";
+import { useTranslations } from "next-intl";
 
 export function ResendActivityList() {
-  const { data, isLoading } = useShipmentLogs(
-    1,
-    6,
-    undefined,
-    undefined,
-    undefined,
-    "email_sent,email_failed",
-  );
-
+  const t = useTranslations("dashboard");
+  const tc = useTranslations("forms.common");
+  const ts = useTranslations("forms.common.status");
+  const { data, isLoading } = useTripLogs(1, 6);
   const logs = data?.data ?? [];
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{fr.dashboard.resendTitle}</CardTitle>
-        <CardDescription>{fr.dashboard.resendDescription}</CardDescription>
+        <CardTitle>{t("resendTitle")}</CardTitle>
+        <CardDescription>{t("resendDescription")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         {isLoading ? (
-          <div className="text-sm text-muted-foreground">{fr.dashboard.loadingResend}</div>
+          <div className="text-sm text-muted-foreground">{tc("loading")}</div>
         ) : logs.length === 0 ? (
-          <div className="text-sm text-muted-foreground">{fr.dashboard.noResendLogs}</div>
+          <div className="text-sm text-muted-foreground">{t("noResendLogs")}</div>
         ) : (
-          logs.map((log) => {
-            const isFailed = log.status === "email_failed";
-            return (
-              <div
-                key={log.id}
-                className="flex flex-col gap-2 rounded-md border p-3 md:flex-row md:items-center md:justify-between"
-              >
-                <div className="space-y-1">
-                  <div className="text-sm font-medium">
-                    {log.shipment?.trackingNumber
-                      ? `Shipment ${log.shipment.trackingNumber}`
-                      : `Shipment #${log.shipmentId}`}
-                  </div>
-                  <div className="text-xs text-muted-foreground">{log.message}</div>
+          logs.map((log) => (
+            <div
+              key={log.id}
+              className="flex flex-col gap-2 rounded-md border p-3 md:flex-row md:items-center md:justify-between"
+            >
+              <div className="space-y-1">
+                <div className="text-sm font-medium">
+                  {log.trip?.name ?? `Trip #${log.tripId.slice(0, 8)}`}
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant={isFailed ? "destructive" : "secondary"}>
-                    {isFailed ? fr.dashboard.failed : fr.dashboard.sent}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(log.timestamp), { addSuffix: true })}
-                  </span>
-                </div>
+                <div className="text-xs text-muted-foreground">{log.message}</div>
               </div>
-            );
-          })
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">{ts(log.status)}</Badge>
+                <span className="text-xs text-muted-foreground">
+                  {formatDistanceToNow(new Date(log.timestamp), { addSuffix: true })}
+                </span>
+              </div>
+            </div>
+          ))
         )}
       </CardContent>
     </Card>

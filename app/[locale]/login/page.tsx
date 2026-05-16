@@ -12,21 +12,23 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { AuthCard, AuthLogo } from "@/components/auth/AuthComponents";
-
-const loginSchema = z.object({
-  email: z.string().email("Adresse e-mail invalide"),
-  password: z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères"),
-});
-
-type LoginFormData = z.infer<typeof loginSchema>;
+import { useTranslations } from "next-intl";
 
 export default function AuthLoginPage() {
+  const t = useTranslations("pages.login");
   const params = useParams();
   const router = useRouter();
   const locale = params.locale as string;
 
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const loginSchema = z.object({
+    email: z.string().email(t("emailInvalid")),
+    password: z.string().min(6, t("passwordTooShort")),
+  });
+
+  type LoginFormData = z.infer<typeof loginSchema>;
 
   const {
     register,
@@ -46,12 +48,12 @@ export default function AuthLoginPage() {
       });
 
       if (result?.error) {
-        toast.error("Identifiants invalides");
+        toast.error(t("invalidCredentials"));
       } else {
         router.push(`/${locale}/dashboard`);
       }
     } catch {
-      toast.error("Une erreur inattendue est survenue");
+      toast.error(t("unexpectedError"));
     } finally {
       setIsLoading(false);
     }
@@ -61,18 +63,18 @@ export default function AuthLoginPage() {
     <AuthCard>
       <AuthLogo />
       <div className="text-center mb-6">
-        <h1 className="text-lg font-semibold text-gray-900">Connexion</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Entrez vos identifiants pour vous connecter.</p>
+        <h1 className="text-lg font-semibold text-gray-900">{t("loginTitle")}</h1>
+        <p className="text-sm text-gray-500 mt-0.5">{t("loginSubtitle")}</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-1.5">
-          <Label className="text-sm font-medium text-gray-700">Email</Label>
-            <Input
+          <Label className="text-sm font-medium text-gray-700">{t("emailLabel")}</Label>
+          <Input
             type="email"
-            placeholder="votre@email.com"
+            placeholder={t("emailPlaceholder")}
             {...register("email")}
-            className={`h-11 text-sm ${errors.email ? "border-red-500" : ""}`}
+            className={`h-11 text-sm ${errors.email ? "border-red-500 ring-red-100" : ""}`}
           />
           {errors.email && (
             <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>
@@ -80,19 +82,19 @@ export default function AuthLoginPage() {
         </div>
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium text-gray-700">Mot de passe</Label>
+            <Label className="text-sm font-medium text-gray-700">{t("passwordLabel")}</Label>
           </div>
           <div className="relative">
             <Input
               type={showPassword ? "text" : "password"}
-              placeholder="Entrez votre mot de passe"
+              placeholder={t("passwordPlaceholder")}
               {...register("password")}
-              className={`h-11 text-sm pr-9 ${errors.password ? "border-red-500" : ""}`}
+              className={`h-11 text-sm pr-9 ${errors.password ? "border-red-500 ring-red-100" : ""}`}
             />
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
             >
               {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
             </button>
@@ -102,8 +104,8 @@ export default function AuthLoginPage() {
           )}
         </div>
 
-        <Button disabled={isLoading} className="w-full h-11 text-sm font-medium btn-shiny">
-          {isLoading ? <Loader2 className="size-4 animate-spin" /> : "Se connecter"}
+        <Button disabled={isLoading} className="w-full h-11 text-sm font-medium btn-shiny mt-2">
+          {isLoading ? <Loader2 className="size-4 animate-spin" /> : t("loginButton")}
         </Button>
       </form>
     </AuthCard>

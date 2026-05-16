@@ -9,7 +9,7 @@ import {
   type NominatimItem,
   type AddressResult,
 } from "@/lib/nominatim";
-import { fr } from "@/lib/i18n/fr";
+import { useTranslations } from "next-intl";
 
 export type { AddressResult } from "@/lib/nominatim";
 
@@ -21,9 +21,11 @@ interface AddressAutocompleteProps {
 
 export function AddressAutocomplete({
   onAddressSelect,
-  placeholder = fr.forms.address.placeholder,
+  placeholder,
   className,
 }: AddressAutocompleteProps) {
+  const ad = useTranslations("forms.address");
+  const displayPlaceholder = placeholder || ad("placeholder");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<NominatimItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -80,7 +82,7 @@ export function AddressAutocomplete({
 
     debounceRef.current = setTimeout(() => {
       void searchAddress(nextQuery);
-    }, 450);
+    }, 800);
   };
 
   const handleSelect = (item: NominatimItem) => {
@@ -93,10 +95,10 @@ export function AddressAutocomplete({
   return (
     <div className={cn("relative", className)}>
       <div className="relative">
-        <Input
+         <Input
           value={query}
             onChange={(e) => handleQueryChange(e.target.value)}
-          placeholder={placeholder}
+          placeholder={displayPlaceholder}
           className="pr-10"
           autoComplete="off"
           onFocus={() => results.length > 0 && setOpen(true)}

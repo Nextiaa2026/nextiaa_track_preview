@@ -14,6 +14,7 @@ const vesselInputSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
+
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();

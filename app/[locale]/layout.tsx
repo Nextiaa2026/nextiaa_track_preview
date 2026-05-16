@@ -4,6 +4,7 @@ import "../globals.css";
 import { cn } from "@/lib/utils";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { AuthProvider } from "@/providers/AuthProvider";
+import { SettingsProvider } from "@/providers/SettingsProvider";
 import { Toaster } from "sonner";
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
@@ -74,7 +75,9 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages} locale={locale}>
           <AuthProvider>
             <QueryProvider>
-              <TooltipProvider>{children}</TooltipProvider>
+              <SettingsProvider>
+                <TooltipProvider>{children}</TooltipProvider>
+              </SettingsProvider>
             </QueryProvider>
           </AuthProvider>
           <Toaster position="top-right" richColors />

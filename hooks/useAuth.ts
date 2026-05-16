@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   type LoginInput, 
 } from "@/lib/validations";
+import { userService } from "@/services/user.service";
 
 export const useCurrentUser = () => {
   const { data: session, status } = useSession();
@@ -45,6 +46,17 @@ export const useLogout = () => {
     },
     onSuccess: () => {
       queryClient.clear();
+    },
+  });
+};
+
+export const useUpdateProfile = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: userService.updateProfile,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     },
   });
 };

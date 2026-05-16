@@ -10,19 +10,18 @@ export async function GET() {
     }
 
     const activeShipments = await db.query.shipments.findMany({
-      where: (s, { inArray }) => 
-        inArray(s.status, ["pending", "in_transit"]),
+      where: (s, { inArray }) => inArray(s.status, ["pending", "in_transit"]),
       with: {
         sender: true,
         receiver: true,
-        vessel: true,
+        trip: { with: { vessel: true } },
       },
       orderBy: (s, { desc }) => [desc(s.updatedAt)],
     });
 
     const markers = activeShipments
       .map((shipment) => {
-        const vessel = shipment.vessel;
+        const vessel = shipment.trip?.vessel;
         const lat =
           vessel?.lastKnownLat ??
           shipment.receiver?.latitude ??
@@ -35,9 +34,11 @@ export async function GET() {
         return {
           shipmentId: shipment.id,
           trackingNumber: shipment.trackingNumber,
+          chassisNumber: shipment.chassisNumber,
           status: shipment.status,
           itemName: shipment.itemName,
-          vesselName: vessel?.name ?? "N/A",
+          tripName: shipment.trip?.name ?? null,
+          vesselName: vessel?.name ?? null,
           latitude: lat,
           longitude: lon,
         };
