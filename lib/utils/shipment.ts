@@ -1,6 +1,4 @@
-/**
- * Shipment Utility Functions
- */
+import { formatCurrency, loadSystemSettings } from "./currency";
 
 /**
  * Generate a unique shipment number
@@ -124,5 +122,6 @@ export function getStatusDisplay(status: string): string {
  * Calculate shipping cost display
  */
 export function formatShippingCost(costInCents: number): string {
-  return `$${(costInCents / 100).toFixed(2)}`;
+  const settings = loadSystemSettings();
+  return formatCurrency(costInCents / 100, settings.currency || "EUR");
 }

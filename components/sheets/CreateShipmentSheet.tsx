@@ -36,6 +36,8 @@ import {
 import { buildInvoiceHtml } from "@/lib/invoice";
 import { useCustomers } from "@/hooks/useCustomers";
 import { generateTrackingNumber } from "@/lib/utils/shipment";
+import { formatCurrency } from "@/lib/utils/currency";
+import { useLocale } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -104,6 +106,7 @@ export function CreateShipmentSheet({
   shipmentId,
 }: CreateShipmentSheetProps) {
   const { settings } = useSettings();
+  const locale = useLocale();
   const [step, setStep] = useState<WizardStep>("sender");
   const stepRef = useRef<WizardStep>(step);
   stepRef.current = step;
@@ -708,7 +711,7 @@ export function CreateShipmentSheet({
                                   {sw("labelShippingCost")} :
                                 </span>{" "}
                                 {typeof watchedValues.shippingCost === "number"
-                                  ? `$${(watchedValues.shippingCost / 100).toFixed(2)}`
+                                  ? formatCurrency(watchedValues.shippingCost / 100, settings.currency || "EUR", locale)
                                   : "-"}
                               </p>
                               <p>

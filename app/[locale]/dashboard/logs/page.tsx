@@ -18,7 +18,7 @@ import { useTranslations } from "next-intl";
 import type { TripLog } from "@/services/shipment.service";
 
 export default function LogsPage() {
-  const t = useTranslations("logs");
+  const t = useTranslations("pages.logs");
   const ts = useTranslations("forms.common.status");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);

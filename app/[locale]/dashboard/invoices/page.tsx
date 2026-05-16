@@ -33,7 +33,9 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { toast } from "sonner";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import { useSettings } from "@/providers/SettingsProvider";
+import { formatCurrency } from "@/lib/utils/currency";
 
 const STATUS_OPTIONS = ["all", "draft", "issued", "paid", "overdue", "cancelled"] as const;
 
@@ -56,6 +58,8 @@ export default function InvoicesPage() {
   const t = useTranslations("pages.invoices");
   const tc = useTranslations("forms.common");
   const tis = useTranslations("forms.common.invoiceStatus");
+  const locale = useLocale();
+  const { settings } = useSettings();
   const router = useRouter();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -124,7 +128,7 @@ export default function InvoicesPage() {
         cell: ({ row }) => (
           <div className="flex items-center gap-2 text-black font-medium">
             <HugeiconsIcon icon={DollarCircleIcon} size={14} className="text-gray-400" />
-            {(row.original.totalAmount / 100).toFixed(2)} {row.original.currency}
+            {formatCurrency(row.original.totalAmount / 100, row.original.currency || settings.currency, locale)}
           </div>
         ),
       },

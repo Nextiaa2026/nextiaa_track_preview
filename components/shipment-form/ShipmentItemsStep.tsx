@@ -18,9 +18,9 @@ import {
 } from "@/components/ui/select";
 import { TripSearchCombobox } from "@/components/shipment-form/trip-search-combobox";
 import { cn } from "@/lib/utils";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import { useSettings } from "@/providers/SettingsProvider";
 import {
-  loadSystemSettings,
   currencySymbol,
   isSuffixCurrency,
   formatCurrency,
@@ -57,8 +57,9 @@ export function ShipmentItemsStep() {
     local: tw("shipmentTypeLocal"),
   };
 
-  const systemSettings = loadSystemSettings();
-  const currency = systemSettings.currency || "EUR";
+  const locale = useLocale();
+  const { settings } = useSettings();
+  const currency = settings.currency || "EUR";
   const sym = currencySymbol(currency);
   const isEur = isSuffixCurrency(currency);
 
@@ -178,7 +179,7 @@ export function ShipmentItemsStep() {
         </div>
         {typeof shippingCostValue === "number" && !isNaN(shippingCostValue) && shippingCostValue > 0 && (
           <p className="mt-1 text-xs text-muted-foreground">
-            {formatCurrency(shippingCostValue, currency)}
+            {formatCurrency(shippingCostValue, currency, locale)}
           </p>
         )}
         {errors.shippingCost && <FieldError>{errors.shippingCost.message}</FieldError>}

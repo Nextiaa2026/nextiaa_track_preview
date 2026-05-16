@@ -1,5 +1,6 @@
 import type { ShipmentReceipt } from "@/services/shipment.service";
 import { getStatusDisplay } from "@/lib/utils/shipment";
+import { formatCurrency, loadSystemSettings } from "@/lib/utils/currency";
 
 function escapeHtml(s: string): string {
   if (!s) return "";
@@ -104,7 +105,7 @@ export function buildReceiptHtml(receipt: ShipmentReceipt): string {
                 </div>
                 <div class="detail-row" style="margin-top: 10px; border-top: 2px solid #d1d5db; padding-top: 16px;">
                   <span class="detail-label" style="font-weight: 800; color: #111827;">Total réglé</span>
-                  <span class="detail-value price">${(r.shipment.shippingCost / 100).toFixed(2)} $</span>
+                  <span class="detail-value price">${formatCurrency(r.shipment.shippingCost / 100, "EUR")}</span>
                 </div>
               </div>
             </div>

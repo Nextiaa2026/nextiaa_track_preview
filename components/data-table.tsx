@@ -112,11 +112,11 @@ export function DataTable<TData>({
     getCoreRowModel: getCoreRowModel(),
     manualPagination: true,
     pageCount: pageCount,
-    getRowId: (row) => {
+    getRowId: (row, index) => {
       // Use the record's own `id` field when available so rowSelection keys
       // are stable record IDs rather than volatile row indices.
       const r = row as Record<string, unknown>;
-      return typeof r.id === "string" ? r.id : String(Math.random());
+      return typeof r.id === "string" ? r.id : String(index);
     },
     state: {
       rowSelection,

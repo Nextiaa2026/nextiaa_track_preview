@@ -1,5 +1,6 @@
 import type { ShipmentReceipt } from "@/services/shipment.service";
 import { getStatusDisplay } from "@/lib/utils/shipment";
+import { formatCurrency, loadSystemSettings } from "@/lib/utils/currency";
 
 type InvoiceOptions = {
   invoiceNumber?: string;
@@ -109,7 +110,7 @@ export function buildInvoiceHtml(
                     <div style="font-weight: 600; color: #111827; margin-bottom: 4px;">${escapeHtml(receipt.shipment.itemName)}</div>
                     <div style="font-size: 12px; color: #6b7280;">Transport de fret consolidé - N° de suivi ${escapeHtml(receipt.shipment.trackingNumber)}</div>
                   </td>
-                  <td class="price-col">${shippingAmount.toFixed(2)} $</td>
+                  <td class="price-col">${formatCurrency(shippingAmount, "EUR")}</td>
                 </tr>
               </tbody>
             </table>
@@ -117,15 +118,15 @@ export function buildInvoiceHtml(
             <div class="totals">
               <div class="total-row">
                 <span>Sous-total</span>
-                <span>${shippingAmount.toFixed(2)} $</span>
+                <span>${formatCurrency(shippingAmount, "EUR")}</span>
               </div>
               <div class="total-row">
                 <span>Taxes (0%)</span>
-                <span>0.00 $</span>
+                <span>${formatCurrency(0, "EUR")}</span>
               </div>
               <div class="total-row grand-total">
                 <span>TOTAL</span>
-                <span>${shippingAmount.toFixed(2)} $</span>
+                <span>${formatCurrency(shippingAmount, "EUR")}</span>
               </div>
             </div>
 

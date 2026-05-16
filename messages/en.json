@@ -28,11 +28,6 @@
       "tripLogs": "trip logs"
     }
   },
-  "logs": {
-    "title": "Activity Logs",
-    "description": "Full history of each step and trip updates.",
-    "searchPlaceholder": "Search by trip..."
-  },
   "tracking": {
     "title": "Track your shipment",
     "description": "Enter your tracking or chassis number to view details and updates.",

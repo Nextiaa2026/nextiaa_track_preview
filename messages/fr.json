@@ -28,11 +28,6 @@
       "tripLogs": "journaux de trajets"
     }
   },
-  "logs": {
-    "title": "Journaux d'activité",
-    "description": "Historique complet de chaque étape et mise à jour des trajets.",
-    "searchPlaceholder": "Rechercher par trajet..."
-  },
   "tracking": {
     "title": "Suivre votre expédition",
     "description": "Saisissez votre numéro d'expédition ou de châssis pour consulter les détails.",

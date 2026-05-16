@@ -30,6 +30,9 @@ import {
   Location01Icon,
 } from "@hugeicons/core-free-icons";
 import type { ShipmentReceipt } from "@/services/shipment.service";
+import { formatCurrency } from "@/lib/utils/currency";
+import { useSettings } from "@/providers/SettingsProvider";
+import { useLocale } from "next-intl";
 
 type OverviewStatRow = {
   label: string;
@@ -151,6 +154,8 @@ export default function ShipmentDetailPage() {
   const { data: shipment, isLoading, error } = useShipment(shipmentId);
   const { mutate: deleteShipment, isPending: isDeleting } = useDeleteShipment();
   const { mutateAsync: createReceipt, isPending: isCreatingReceipt } = useCreateReceipt();
+  const locale = useLocale();
+  const { settings } = useSettings();
   const [logSheetOpen, setLogSheetOpen] = useState(false);
   const [editWizardOpen, setEditWizardOpen] = useState(false);
   const [receiptPreviewOpen, setReceiptPreviewOpen] = useState(false);
@@ -199,7 +204,7 @@ export default function ShipmentDetailPage() {
       },
       {
         label: "Shipping Fee",
-        value: `$${(shipment.shippingCost / 100).toFixed(2)}`,
+        value: formatCurrency(shipment.shippingCost / 100, settings.currency || "EUR", locale),
         icon: TruckIcon,
         color: "text-emerald-600",
       },
@@ -258,7 +263,7 @@ export default function ShipmentDetailPage() {
               <div class="row"><div class="label">Tracking Number</div><div class="value">${receipt.shipment.trackingNumber}</div></div>
               <div class="row"><div class="label">Item</div><div class="value">${receipt.shipment.itemName}</div></div>
               <div class="row"><div class="label">Status</div><div class="value">${receipt.shipment.status}</div></div>
-              <div class="row"><div class="label">Shipping Cost</div><div class="value">$${(receipt.shipment.shippingCost / 100).toFixed(2)}</div></div>
+              <div class="row"><div class="label">Shipping Cost</div><div class="value">${formatCurrency(receipt.shipment.shippingCost / 100, settings.currency || "EUR", locale)}</div></div>
             </div>
             <div class="section">
               <h3>Sender</h3>
@@ -655,7 +660,7 @@ export default function ShipmentDetailPage() {
                       <p><span className="font-medium">Tracking:</span> {receiptPreview.shipment.trackingNumber}</p>
                       <p><span className="font-medium">Item:</span> {receiptPreview.shipment.itemName}</p>
                       <p><span className="font-medium">Status:</span> {receiptPreview.shipment.status}</p>
-                      <p><span className="font-medium">Shipping Cost:</span> ${(receiptPreview.shipment.shippingCost / 100).toFixed(2)}</p>
+                      <p><span className="font-medium">Shipping Cost:</span> {formatCurrency(receiptPreview.shipment.shippingCost / 100, settings.currency || "EUR", locale)}</p>
                     </div>
                     <div>
                       <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sender</p>
