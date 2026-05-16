@@ -75,7 +75,7 @@ export function AddTripLogSheet({
         className="flex h-full max-h-dvh w-full flex-col overflow-hidden border-none bg-white p-0 shadow-2xl sm:max-w-4xl md:max-w-5xl lg:max-w-6xl"
       >
         <SheetHeader className="px-6 py-4 border-b border-gray-100">
-          <SheetTitle className="text-xl font-semibold">
+          <SheetTitle className="text-lg font-semibold">
             {t("title")}
           </SheetTitle>
           <SheetDescription className="text-sm text-muted-foreground mt-1">

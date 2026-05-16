@@ -136,7 +136,7 @@ export function CreateCustomerSheet({
         className="flex h-full w-full flex-col gap-0 border-border bg-background p-0 sm:max-w-4xl md:max-w-5xl lg:max-w-6xl"
       >
         <SheetHeader className="px-6 py-4 border-b border-gray-100">
-          <SheetTitle className="text-xl font-semibold">
+          <SheetTitle className="text-lg font-semibold">
             {cs("title")}
           </SheetTitle>
           <SheetDescription className="text-sm text-muted-foreground mt-1">

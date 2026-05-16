@@ -344,7 +344,7 @@ export default function ShipmentDetailPage() {
       <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
+            <h1 className="font-heading text-xl font-bold tracking-tight text-foreground">
               {shipment.trackingNumber}
             </h1>
             <span
@@ -633,7 +633,7 @@ export default function ShipmentDetailPage() {
       />
 
       <Sheet open={receiptPreviewOpen} onOpenChange={setReceiptPreviewOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-2xl">
+        <SheetContent side="right" className="w-full lg:max-w-2xl">
           <SheetHeader>
             <SheetTitle>Receipt preview</SheetTitle>
             <SheetDescription>

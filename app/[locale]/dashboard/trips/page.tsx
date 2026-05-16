@@ -367,7 +367,7 @@ export default function TripsPage() {
           className="flex h-full max-h-dvh w-full flex-col gap-0 border-l border-white/5 bg-background p-0 sm:max-w-xl"
         >
           <SheetHeader className="px-6 py-5 border-b border-white/5 bg-muted/20">
-            <SheetTitle className="text-xl font-bold">
+            <SheetTitle className="text-lg font-semibold">
               {editingTrip ? t("sheetTitleEdit") : t("sheetTitleCreate")}
             </SheetTitle>
             <SheetDescription className="text-sm text-muted-foreground/70">
@@ -557,7 +557,7 @@ export default function TripsPage() {
       <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
         <DialogContent className="sm:max-w-lg p-0 overflow-hidden border border-border shadow-lg">
           <DialogHeader className="px-6 pt-8 pb-4">
-            <DialogTitle className="text-xl font-bold tracking-tight">
+            <DialogTitle>
               {t("statusDialogTitle")}
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground mt-2">
@@ -594,14 +594,12 @@ export default function TripsPage() {
               variant="outline"
               onClick={() => void onUpdateStatus(false)}
               disabled={isUpdatingStatus}
-              className="flex-1 h-11 rounded-lg font-bold text-[11px] tracking-wider"
             >
               {t("updateWithoutNotify")}
             </Button>
             <Button
               onClick={() => void onUpdateStatus(true)}
               disabled={isUpdatingStatus}
-              className="flex-1 h-11 rounded-lg font-bold text-[11px] tracking-wider btn-shiny"
             >
               {isUpdatingStatus ? (
                 <Loader2 className="size-4 animate-spin" />

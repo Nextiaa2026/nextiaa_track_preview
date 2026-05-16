@@ -255,7 +255,7 @@ export default function VesselsPage() {
           className="flex h-full max-h-dvh w-full flex-col gap-0 border-l border-white/5 bg-background p-0 sm:max-w-xl"
         >
           <SheetHeader className="px-6 py-5 border-b border-white/5 bg-muted/20">
-            <SheetTitle className="text-2xl font-bold tracking-tight">
+            <SheetTitle className="text-lg font-semibold">
               {editingVessel ? t("sheetTitleEdit") : t("sheetTitleCreate")}
             </SheetTitle>
             <SheetDescription className="text-sm text-muted-foreground/70">

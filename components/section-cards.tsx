@@ -26,7 +26,7 @@ export function SectionCards() {
           <Card key={idx} className="@container/card">
             <CardHeader>
               <CardDescription>{tc("loading")}</CardDescription>
-              <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+              <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
                 --
               </CardTitle>
             </CardHeader>
@@ -41,7 +41,7 @@ export function SectionCards() {
       <Card className="@container/card">
         <CardHeader>
           <CardDescription>{t("totalShipments")}</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+          <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
             {stats.totalShipments.toLocaleString()}
           </CardTitle>
           <CardAction>
@@ -64,7 +64,7 @@ export function SectionCards() {
       <Card className="@container/card">
         <CardHeader>
           <CardDescription>{t("deliveredShipments")}</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+          <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
             {stats.deliveredShipments.toLocaleString()}
           </CardTitle>
           <CardAction>
@@ -87,7 +87,7 @@ export function SectionCards() {
       <Card className="@container/card">
         <CardHeader>
           <CardDescription>{t("clientViews")}</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+          <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
             {stats.clientTrackingViews.toLocaleString()}
           </CardTitle>
           <CardAction>
@@ -108,7 +108,7 @@ export function SectionCards() {
       <Card className="@container/card">
         <CardHeader>
           <CardDescription>{t("resendActivities")}</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+          <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
             {stats.resendEmailsSent.toLocaleString()}
           </CardTitle>
           <CardAction>

@@ -512,7 +512,7 @@ export function CreateShipmentSheet({
         className="flex h-full max-h-dvh w-full flex-col gap-0 border-l border-white/5 bg-background p-0 sm:max-w-4xl md:max-w-5xl lg:max-w-6xl"
       >
         <SheetHeader className="px-6 py-5 border-b border-white/5 bg-muted/20">
-          <SheetTitle className="text-2xl font-bold tracking-tight">
+          <SheetTitle className="text-lg font-semibold">
             {isEdit ? sw("sheetTitleEdit") : sw("sheetTitleNew")}
           </SheetTitle>
           <SheetDescription className="text-sm text-muted-foreground/70">
