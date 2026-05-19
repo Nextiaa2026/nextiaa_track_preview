@@ -63,6 +63,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { AddTripLogSheet } from "@/components/sheets/AddTripLogSheet";
 import { useTranslations } from "next-intl";
 import { DatePicker } from "@/components/ui/date-picker";
+import { Link } from "@/lib/navigation";
 
 // ─── Zod schema for the trip form ─────────────────────────────────────────────
 
@@ -220,7 +221,12 @@ export default function TripsPage() {
         header: t("colName"),
         cell: ({ row }) => (
           <div className="flex flex-col min-w-0">
-            <span className="font-medium text-black truncate">{row.original.name}</span>
+            <Link
+              href={`/dashboard/trips/${row.original.id}`}
+              className="font-semibold text-primary hover:underline truncate text-left"
+            >
+              {row.original.name}
+            </Link>
             {row.original.vessel && (
               <span className="text-[10px] text-gray-400 truncate">
                 {row.original.vessel.name} · {row.original.vessel.imo}

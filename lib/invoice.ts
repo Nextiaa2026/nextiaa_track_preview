@@ -20,6 +20,8 @@ export function buildInvoiceHtml(
   receipt: ShipmentReceipt,
   options: InvoiceOptions = {},
 ): string {
+  const settings = loadSystemSettings();
+  const currency = settings.currency || "EUR";
   const issuedAt = options.issuedAt ?? receipt.issuedAt;
   const invoiceNumber =
     options.invoiceNumber ?? `INV-${receipt.receiptNumber.replace(/^RCPT-?/, "")}`;
@@ -110,7 +112,7 @@ export function buildInvoiceHtml(
                     <div style="font-weight: 600; color: #111827; margin-bottom: 4px;">${escapeHtml(receipt.shipment.itemName)}</div>
                     <div style="font-size: 12px; color: #6b7280;">Transport de fret consolidé - N° de suivi ${escapeHtml(receipt.shipment.trackingNumber)}</div>
                   </td>
-                  <td class="price-col">${formatCurrency(shippingAmount, "EUR")}</td>
+                  <td class="price-col">${formatCurrency(shippingAmount, currency)}</td>
                 </tr>
               </tbody>
             </table>
@@ -118,15 +120,15 @@ export function buildInvoiceHtml(
             <div class="totals">
               <div class="total-row">
                 <span>Sous-total</span>
-                <span>${formatCurrency(shippingAmount, "EUR")}</span>
+                <span>${formatCurrency(shippingAmount, currency)}</span>
               </div>
               <div class="total-row">
                 <span>Taxes (0%)</span>
-                <span>${formatCurrency(0, "EUR")}</span>
+                <span>${formatCurrency(0, currency)}</span>
               </div>
               <div class="total-row grand-total">
                 <span>TOTAL</span>
-                <span>${formatCurrency(shippingAmount, "EUR")}</span>
+                <span>${formatCurrency(shippingAmount, currency)}</span>
               </div>
             </div>
 

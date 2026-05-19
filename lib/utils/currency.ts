@@ -45,10 +45,10 @@ export function formatCurrency(amount: number, currency: string, locale = "fr-FR
   const upper = (currency ?? "EUR").toUpperCase();
   const sym = currencySymbol(upper);
   
-  // Use minimumFractionDigits: 0 to hide .00
+  // Set fraction digits to 0 to hide decimals/commas completely
   const formatted = amount.toLocaleString(locale, {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 0,
   });
 
   return upper === "EUR" ? `${formatted} ${sym}` : `${sym}${formatted}`;

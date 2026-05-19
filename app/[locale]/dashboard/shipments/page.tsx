@@ -143,8 +143,9 @@ export default function ShipmentsPage() {
       setBulkDialogOpen(false);
       setBulkTripId("");
       setRowSelection({});
-    } catch {
-      toast.error(t("bulkAssignError"));
+    } catch (err: any) {
+      const errMsg = err?.response?.data?.error || err?.message || t("bulkAssignError");
+      toast.error(errMsg);
     }
   };
 

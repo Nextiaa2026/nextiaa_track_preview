@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { shipments, trips } from "@/db/schema";
 import { auth } from "@/lib/auth";
-import { inArray, eq } from "drizzle-orm";
+import { inArray, eq, and } from "drizzle-orm";
 import { z } from "zod";
 
 const bulkAssignSchema = z.object({
@@ -19,6 +19,21 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { shipmentIds, tripId } = bulkAssignSchema.parse(body);
+
+    if (tripId) {
+      const deliveredShipments = await db.query.shipments.findMany({
+        where: and(
+          inArray(shipments.id, shipmentIds),
+          eq(shipments.status, "delivered")
+        ),
+      });
+      if (deliveredShipments.length > 0) {
+        return NextResponse.json(
+          { error: "Cannot allocate shipments that are already delivered to a trip" },
+          { status: 400 }
+        );
+      }
+    }
 
     let newStatus: string | undefined = undefined;
 

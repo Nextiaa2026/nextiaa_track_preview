@@ -67,7 +67,8 @@ function ShipmentOverviewTable({
         </h3>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
+        {/* Desktop View */}
+        <table className="hidden md:table w-full text-left text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/5">
               <th className="w-12 px-4 py-3 align-middle">
@@ -142,6 +143,68 @@ function ShipmentOverviewTable({
             ))}
           </tbody>
         </table>
+
+        {/* Mobile View */}
+        <div className="md:hidden divide-y divide-border">
+          <div className="flex items-center justify-between px-4 py-3 bg-muted/5 text-xs text-muted-foreground border-b border-border">
+            <div className="flex items-center gap-3">
+              <Checkbox
+                checked={
+                  overviewAllSelected
+                    ? true
+                    : overviewSomeSelected
+                      ? "indeterminate"
+                      : false
+                }
+                onCheckedChange={(checked) => {
+                  const next = !!checked;
+                  setOverviewSelection(
+                    Object.fromEntries(
+                      overviewStats.map((_, i) => [i, next]),
+                    ),
+                  );
+                }}
+                aria-label="Select all overview rows"
+                className="border-gray-300"
+              />
+              <span className="font-medium text-foreground">Select All Metrics</span>
+            </div>
+            {overviewSelectedCount > 0 && (
+              <span className="font-bold text-primary">{overviewSelectedCount} selected</span>
+            )}
+          </div>
+          {overviewStats.map((stat, i) => (
+            <div key={i} className="flex items-center justify-between p-4 hover:bg-muted/5 transition-colors">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <Checkbox
+                  checked={!!overviewSelection[i]}
+                  onCheckedChange={(checked) =>
+                    setOverviewSelection((prev) => ({
+                      ...prev,
+                      [i]: !!checked,
+                    }))
+                  }
+                  aria-label={`Select ${stat.label}`}
+                  className="border-gray-300 shrink-0"
+                />
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground font-normal truncate">{stat.label}</p>
+                  <p className="text-sm font-semibold text-foreground break-words mt-0.5">{stat.value}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 ml-4 shrink-0">
+                <div
+                  className={cn(
+                    "flex h-8 w-8 items-center justify-center rounded-lg bg-muted/10",
+                    stat.color,
+                  )}
+                >
+                  <HugeiconsIcon icon={stat.icon} size={16} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </Card>
   );

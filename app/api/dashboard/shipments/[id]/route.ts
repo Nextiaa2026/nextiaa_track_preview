@@ -52,6 +52,21 @@ export async function PATCH(
     const { shipmentPatchSchema } = await import("@/lib/validations");
     const validatedData = shipmentPatchSchema.parse(body);
 
+    const currentShipment = await db.query.shipments.findFirst({
+      where: eq(shipments.id, id),
+    });
+
+    if (!currentShipment) {
+      return NextResponse.json({ error: "Shipment not found" }, { status: 404 });
+    }
+
+    if (validatedData.tripId && currentShipment.status === "delivered") {
+      return NextResponse.json(
+        { error: "Cannot allocate a delivered shipment to a trip" },
+        { status: 400 }
+      );
+    }
+
     let newStatus: string | undefined = undefined;
     if (validatedData.tripId !== undefined) {
       if (validatedData.tripId) {

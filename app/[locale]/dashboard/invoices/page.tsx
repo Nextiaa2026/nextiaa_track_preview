@@ -188,7 +188,7 @@ export default function InvoicesPage() {
         ),
       },
     ],
-    [router, t],
+    [router, t, settings.currency, locale, tis],
   );
 
   return (

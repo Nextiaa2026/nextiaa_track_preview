@@ -12,6 +12,8 @@ function escapeHtml(s: string): string {
 }
 
 export function buildReceiptHtml(receipt: ShipmentReceipt): string {
+  const settings = loadSystemSettings();
+  const currency = settings.currency || "EUR";
   const r = receipt;
   const date = new Date(r.issuedAt).toLocaleString("fr-FR", {
     dateStyle: "medium",
@@ -105,7 +107,7 @@ export function buildReceiptHtml(receipt: ShipmentReceipt): string {
                 </div>
                 <div class="detail-row" style="margin-top: 10px; border-top: 2px solid #d1d5db; padding-top: 16px;">
                   <span class="detail-label" style="font-weight: 800; color: #111827;">Total réglé</span>
-                  <span class="detail-value price">${formatCurrency(r.shipment.shippingCost / 100, "EUR")}</span>
+                  <span class="detail-value price">${formatCurrency(r.shipment.shippingCost / 100, currency)}</span>
                 </div>
               </div>
             </div>

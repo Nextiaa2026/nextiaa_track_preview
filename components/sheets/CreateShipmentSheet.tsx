@@ -424,6 +424,10 @@ export function CreateShipmentSheet({
     const submitData: ShipmentInput = parsed.data;
 
     if (isEdit && shipmentId) {
+      if (submitData.tripId && existingShipment?.status === "delivered") {
+        toast.error("Cannot allocate a delivered shipment to a trip");
+        return;
+      }
       const toastId = toast.loading(sw("toastSaving"));
       updateShipment(
         {
