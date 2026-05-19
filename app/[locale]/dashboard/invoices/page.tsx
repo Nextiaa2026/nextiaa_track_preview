@@ -26,7 +26,7 @@ import type { Invoice } from "@/services/shipment.service";
 import { format } from "date-fns";
 import {
   Calendar01Icon,
-  DollarCircleIcon,
+  EuroCircleIcon,
   Invoice01Icon,
   MoreHorizontalIcon,
   PackageIcon,
@@ -127,7 +127,7 @@ export default function InvoicesPage() {
         header: t("colTotal"),
         cell: ({ row }) => (
           <div className="flex items-center gap-2 text-black font-medium">
-            <HugeiconsIcon icon={DollarCircleIcon} size={14} className="text-gray-400" />
+            <HugeiconsIcon icon={EuroCircleIcon} size={14} className="text-gray-400" />
             {formatCurrency(row.original.totalAmount / 100, row.original.currency || settings.currency, locale)}
           </div>
         ),

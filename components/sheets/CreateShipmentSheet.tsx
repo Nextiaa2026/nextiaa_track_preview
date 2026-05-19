@@ -714,8 +714,8 @@ export function CreateShipmentSheet({
                                 <span className="font-medium">
                                   {sw("labelShippingCost")} :
                                 </span>{" "}
-                                {typeof watchedValues.shippingCost === "number"
-                                  ? formatCurrency(watchedValues.shippingCost / 100, settings.currency || "EUR", locale)
+                                {watchedValues.shippingCost
+                                  ? formatCurrency(Number(watchedValues.shippingCost), settings.currency || "EUR", locale)
                                   : "-"}
                               </p>
                               <p>

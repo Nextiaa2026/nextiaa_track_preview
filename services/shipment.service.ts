@@ -68,7 +68,7 @@ export interface ShipmentDetail extends Shipment {
   itemDescription?: string | null;
   itemImage?: string | null;
   itemDimensions?: string | null;
-  shippingCost: number;
+  shippingCost: string;
   estimatedDelivery?: string | null;
   actualDelivery?: string | null;
   tripId?: string | null;
@@ -191,7 +191,7 @@ export interface ShipmentReceipt {
     itemWeight?: string | null;
     status: string;
     createdAt: string;
-    shippingCost: number;
+    shippingCost: string;
   };
   sender: {
     name: string;

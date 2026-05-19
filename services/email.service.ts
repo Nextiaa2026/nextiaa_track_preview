@@ -259,7 +259,7 @@ export const emailService = {
     try {
       const html = generateShipmentCreatedTemplate(data);
       await resend.emails.send({
-        from: "Nexiaa Track <onboarding@resend.dev>",
+        from: "Nexiaa Track <contact@ginfos.site>",
         to: data.recipient.email,
         subject: `Votre expédition ${data.trackingNumber} a été créée`,
         html: html,
@@ -297,14 +297,18 @@ export const emailService = {
           buildDocumentSection("Aperçu de la facture", data.invoiceHtml),
       });
       
-      await resend.emails.send({
-        from: "Nexiaa Track <onboarding@resend.dev>",
+   const {data:emailResponse, error} =   await resend.emails.send({
+        from: "Nexiaa Track <contact@ginfos.site>",
         to: data.recipient.email,
         subject: `Expédition ${data.trackingNumber} : reçu, facture et statut`,
         html: html,
       });
 
-      return { success: true };
+      if (error) {
+        throw error;
+      }
+
+      return emailResponse;
     } catch (error) {
       console.error("Failed to send shipment packet email:", error);
       throw error;
@@ -319,7 +323,7 @@ export const emailService = {
     try {
       const html = generateStatusUpdateTemplate(data);
       await resend.emails.send({
-        from: "Nexiaa Track <onboarding@resend.dev>",
+        from: "Nexiaa Track <contact@ginfos.site>",
         to: data.recipient.email,
         subject: `Mise à jour du statut de l'expédition ${data.trackingNumber}`,
         html: html,
@@ -340,7 +344,7 @@ export const emailService = {
     try {
       const html = generateDeliveryConfirmationTemplate(data);
       await resend.emails.send({
-        from: "Nexiaa Track <onboarding@resend.dev>",
+        from: "Nexiaa Track <contact@ginfos.site>",
         to: data.recipient.email,
         subject: `Livraison confirmée pour ${data.trackingNumber}`,
         html: html,
@@ -361,7 +365,7 @@ export const emailService = {
     try {
       const html = generateFailedDeliveryTemplate(data);
       await resend.emails.send({
-        from: "Nexiaa Track <onboarding@resend.dev>",
+        from: "Nexiaa Track <contact@ginfos.site>",
         to: data.recipient.email,
         subject: `Échec de la livraison pour ${data.trackingNumber}`,
         html: html,
@@ -382,7 +386,7 @@ export const emailService = {
     try {
       const html = generateVesselStatusUpdateTemplate(data);
       await resend.emails.send({
-        from: "Nexiaa Track <onboarding@resend.dev>",
+        from: "Nexiaa Track <contact@ginfos.site>",
         to: data.recipient.email,
         subject: `Mise à jour du transport ${data.vesselName} pour ${data.trackingNumber}`,
         html: html,

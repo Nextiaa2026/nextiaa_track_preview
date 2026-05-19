@@ -41,17 +41,8 @@ export function currencySymbol(currency: string): string {
  * EUR: amount goes before the symbol → "1 500 €"
  * Others: symbol goes before the amount → "$1,500"
  */
-export function formatCurrency(amount: number, currency: string, locale = "fr-FR"): string {
-  const upper = (currency ?? "EUR").toUpperCase();
-  const sym = currencySymbol(upper);
-  
-  // Set fraction digits to 0 to hide decimals/commas completely
-  const formatted = amount.toLocaleString(locale, {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  });
-
-  return upper === "EUR" ? `${formatted} ${sym}` : `${sym}${formatted}`;
+export function formatCurrency(amount: number, currency?: string, locale = "fr-FR"): string {
+  return String(amount);
 }
 
 /** True when the currency symbol should appear after the amount (e.g. EUR). */

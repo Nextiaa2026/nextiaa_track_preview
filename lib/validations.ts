@@ -81,8 +81,8 @@ export const shipmentFormSchema = z.object({
   receiver: customerSchema.partial().optional(),
   itemName: z.string().optional(),
   shippingCost: z.preprocess(
-    optionalShippingCost,
-    z.number().optional(),
+    (val) => (val === undefined || val === null ? "" : String(val)),
+    z.string().optional(),
   ),
 });
 
@@ -115,11 +115,8 @@ export const wizardItemsSchema = z.object({
   itemDimensions: z.string().optional(),
   tripId: z.string().uuid().optional(),
   shippingCost: z.preprocess(
-    optionalShippingCost,
-    z
-      .number({ error: "Les frais d'expédition sont obligatoires" })
-      .int()
-      .positive("Les frais d'expédition doivent être positifs"),
+    (val) => (val === undefined || val === null ? "" : String(val)),
+    z.string().min(1, "Les frais d'expédition sont obligatoires"),
   ),
   estimatedDelivery: z.coerce.date().optional(),
 });
@@ -130,11 +127,8 @@ export const shipmentSchema = shipmentPartyRefines(
     ...shipmentCoreShape,
     itemName: z.string().min(2, "Le titre de l'article est obligatoire"),
     shippingCost: z.preprocess(
-      optionalShippingCost,
-      z
-        .number({ error: "Les frais d'expédition sont obligatoires" })
-        .int()
-        .positive("Les frais d'expédition doivent être positifs"),
+      (val) => (val === undefined || val === null ? "" : String(val)),
+      z.string().min(1, "Les frais d'expédition sont obligatoires"),
     ),
   }),
 );
@@ -160,8 +154,8 @@ export const shipmentPatchSchema = z
       ])
       .optional(),
     shippingCost: z.preprocess(
-      optionalShippingCost,
-      z.number().int().positive().optional(),
+      (val) => (val === undefined || val === null || val === "" ? undefined : String(val)),
+      z.string().optional(),
     ),
     estimatedDelivery: z.union([z.coerce.date(), z.null()]).optional(),
     actualDelivery: z.union([z.coerce.date(), z.null()]).optional(),

@@ -121,7 +121,7 @@ export function getStatusDisplay(status: string): string {
 /**
  * Calculate shipping cost display
  */
-export function formatShippingCost(costInCents: number): string {
+export function formatShippingCost(cost: string | number): string {
   const settings = loadSystemSettings();
-  return formatCurrency(costInCents / 100, settings.currency || "EUR");
+  return formatCurrency(Number(cost || 0), settings.currency || "EUR");
 }

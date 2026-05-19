@@ -267,7 +267,7 @@ export default function ShipmentDetailPage() {
       },
       {
         label: "Shipping Fee",
-        value: formatCurrency(shipment.shippingCost / 100, settings.currency || "EUR", locale),
+        value: formatCurrency(Number(shipment.shippingCost || 0), settings.currency || "EUR", locale),
         icon: TruckIcon,
         color: "text-emerald-600",
       },
@@ -326,7 +326,7 @@ export default function ShipmentDetailPage() {
               <div class="row"><div class="label">Tracking Number</div><div class="value">${receipt.shipment.trackingNumber}</div></div>
               <div class="row"><div class="label">Item</div><div class="value">${receipt.shipment.itemName}</div></div>
               <div class="row"><div class="label">Status</div><div class="value">${receipt.shipment.status}</div></div>
-              <div class="row"><div class="label">Shipping Cost</div><div class="value">${formatCurrency(receipt.shipment.shippingCost / 100, settings.currency || "EUR", locale)}</div></div>
+              <div class="row"><div class="label">Shipping Cost</div><div class="value">${formatCurrency(Number(receipt.shipment.shippingCost || 0), settings.currency || "EUR", locale)}</div></div>
             </div>
             <div class="section">
               <h3>Sender</h3>
@@ -723,7 +723,7 @@ export default function ShipmentDetailPage() {
                       <p><span className="font-medium">Tracking:</span> {receiptPreview.shipment.trackingNumber}</p>
                       <p><span className="font-medium">Item:</span> {receiptPreview.shipment.itemName}</p>
                       <p><span className="font-medium">Status:</span> {receiptPreview.shipment.status}</p>
-                      <p><span className="font-medium">Shipping Cost:</span> {formatCurrency(receiptPreview.shipment.shippingCost / 100, settings.currency || "EUR", locale)}</p>
+                      <p><span className="font-medium">Shipping Cost:</span> {formatCurrency(Number(receiptPreview.shipment.shippingCost || 0), settings.currency || "EUR", locale)}</p>
                     </div>
                     <div>
                       <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sender</p>

@@ -25,7 +25,7 @@ export function buildInvoiceHtml(
   const issuedAt = options.issuedAt ?? receipt.issuedAt;
   const invoiceNumber =
     options.invoiceNumber ?? `INV-${receipt.receiptNumber.replace(/^RCPT-?/, "")}`;
-  const shippingAmount = receipt.shipment.shippingCost / 100;
+  const shippingAmount = Number(receipt.shipment.shippingCost || 0);
   const date = new Date(issuedAt).toLocaleString("fr-FR", {
     dateStyle: "medium",
   });
