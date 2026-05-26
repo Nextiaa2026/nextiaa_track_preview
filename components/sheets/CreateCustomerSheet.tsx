@@ -5,7 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { customerSchema, type CustomerInput } from "@/lib/validations";
 import type { AddressResult } from "@/lib/nominatim";
-import { useCreateCustomer } from "@/hooks/useCustomers";
+import { useCreateCustomer, useUpdateCustomer } from "@/hooks/useCustomers";
+import type { Customer } from "@/services/customer.service";
 import { toast } from "sonner";
 import {
   Sheet,
@@ -32,12 +33,14 @@ interface CreateCustomerSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  customer?: Customer | null;
 }
 
 export function CreateCustomerSheet({
   open,
   onOpenChange,
   onSuccess,
+  customer,
 }: CreateCustomerSheetProps) {
   const cs = useTranslations("forms.customerSheet");
   const p = useTranslations("forms.party");
@@ -45,7 +48,10 @@ export function CreateCustomerSheet({
   const fc = useTranslations("forms.common");
   const tsw = useTranslations("forms.shipmentWizard");
   const tl = useTranslations("forms.login");
-  const { mutate: createCustomer, isPending } = useCreateCustomer();
+  const { mutate: createCustomer, isPending: isCreating } = useCreateCustomer();
+  const { mutate: updateCustomer, isPending: isUpdating } = useUpdateCustomer();
+  const isPending = isCreating || isUpdating;
+  const isEditing = !!customer;
   const [mapCoords, setMapCoords] = useState<{ lat: number; lon: number } | null>(
     null,
   );
@@ -70,26 +76,60 @@ export function CreateCustomerSheet({
     register("longitude");
   }, [register]);
 
-  const onSubmit = (data: CustomerInput) => {
-    const toastId = toast.loading(cs("adding"));
-
-    createCustomer(data, {
-      onSuccess: () => {
-        toast.dismiss(toastId);
-        toast.success(cs("success"));
-        reset();
+  useEffect(() => {
+    if (!open) return;
+    if (customer) {
+      reset({
+        name: customer.name,
+        email: customer.email,
+        phone: customer.phone,
+        address: customer.address,
+        city: customer.city,
+        state: customer.state,
+        zipCode: customer.zipCode,
+        country: customer.country,
+        locality: customer.locality ?? undefined,
+        latitude: customer.latitude ?? undefined,
+        longitude: customer.longitude ?? undefined,
+      });
+      if (customer.latitude != null && customer.longitude != null) {
+        setMapCoords({ lat: customer.latitude, lon: customer.longitude });
+      } else {
         setMapCoords(null);
-        setMapCounty("");
-        onOpenChange(false);
-        onSuccess?.();
-      },
-      onError: (err) => {
-        toast.dismiss(toastId);
-        toast.error(cs("failTitle"), {
-          description: err instanceof Error ? err.message : cs("failGeneric"),
-        });
-      },
-    });
+      }
+      setMapCounty("");
+    } else {
+      reset({ country: "Cameroon" });
+      setMapCoords(null);
+      setMapCounty("");
+    }
+  }, [open, customer, reset]);
+
+  const onSubmit = (data: CustomerInput) => {
+    const toastId = toast.loading(isEditing ? cs("updating") : cs("adding"));
+
+    const onSuccessHandler = () => {
+      toast.dismiss(toastId);
+      toast.success(isEditing ? cs("updateSuccess") : cs("success"));
+      reset();
+      setMapCoords(null);
+      setMapCounty("");
+      onOpenChange(false);
+      onSuccess?.();
+    };
+
+    const onErrorHandler = (err: unknown) => {
+      toast.dismiss(toastId);
+      toast.error(isEditing ? cs("updateFailTitle") : cs("failTitle"), {
+        description: err instanceof Error ? err.message : cs("failGeneric"),
+      });
+    };
+
+    if (customer) {
+      updateCustomer({ id: customer.id, data }, { onSuccess: onSuccessHandler, onError: onErrorHandler });
+    } else {
+      createCustomer(data, { onSuccess: onSuccessHandler, onError: onErrorHandler });
+    }
   };
 
   const applyGeocode = (r: AddressResult) => {
@@ -137,10 +177,10 @@ export function CreateCustomerSheet({
       >
         <SheetHeader className="px-6 py-4 border-b border-gray-100">
           <SheetTitle className="text-lg font-semibold">
-            {cs("title")}
+            {isEditing ? cs("editTitle") : cs("title")}
           </SheetTitle>
           <SheetDescription className="text-sm text-muted-foreground mt-1">
-            {cs("description") || "Gérez les informations de vos clients et partenaires."}
+            {isEditing ? cs("editDescription") : cs("description")}
           </SheetDescription>
         </SheetHeader>
 
@@ -309,6 +349,8 @@ export function CreateCustomerSheet({
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         {fc("saving")}
                       </>
+                    ) : isEditing ? (
+                      cs("updateCustomer")
                     ) : (
                       cs("saveCustomer")
                     )}

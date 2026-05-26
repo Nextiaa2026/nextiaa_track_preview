@@ -124,11 +124,17 @@
     "customerSheet": {
       "title": "New Customer",
       "description": "Manage your customer and partner information.",
+      "editTitle": "Edit Customer",
+      "editDescription": "Update this customer's contact and address details.",
       "adding": "Adding customer...",
+      "updating": "Updating customer...",
       "success": "Customer added successfully.",
+      "updateSuccess": "Customer updated successfully.",
       "failTitle": "Unable to add customer",
+      "updateFailTitle": "Unable to update customer",
       "failGeneric": "An error occurred.",
-      "saveCustomer": "Save Customer"
+      "saveCustomer": "Save Customer",
+      "updateCustomer": "Update Customer"
     },
     "shipmentLog": {
       "title": "Post an Update",

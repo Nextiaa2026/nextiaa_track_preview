@@ -42,6 +42,7 @@ export default function CustomersPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
 
   const {
@@ -50,6 +51,16 @@ export default function CustomersPage() {
     error,
   } = useCustomers(page, pageSize, startDate, endDate, debouncedSearch);
   const { mutate: deleteCustomer } = useDeleteCustomer();
+
+  const openCreate = useCallback(() => {
+    setEditingCustomer(null);
+    setSheetOpen(true);
+  }, []);
+
+  const openEdit = useCallback((customer: Customer) => {
+    setEditingCustomer(customer);
+    setSheetOpen(true);
+  }, []);
 
   const handleDelete = useCallback(
     (id: string) => {
@@ -184,7 +195,9 @@ export default function CustomersPage() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>{t("viewDetails")}</DropdownMenuItem>
-                <DropdownMenuItem>{t("editCustomer")}</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => openEdit(customer)}>
+                  {t("editCustomer")}
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-red-600 font-medium"
@@ -198,7 +211,7 @@ export default function CustomersPage() {
         },
       },
     ],
-    [handleDelete, t],
+    [handleDelete, openEdit, t],
   );
 
   if (error) {
@@ -247,7 +260,7 @@ export default function CustomersPage() {
         searchPlaceholder={t("searchPlaceholder")}
         actions={
           <Button
-            onClick={() => setSheetOpen(true)}
+            onClick={openCreate}
             className="h-10 rounded-lg px-4 font-medium w-full sm:w-auto"
           >
             {t("addButton")}
@@ -265,8 +278,15 @@ export default function CustomersPage() {
 
       <CreateCustomerSheet
         open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        onSuccess={() => setPage(1)}
+        onOpenChange={(open) => {
+          setSheetOpen(open);
+          if (!open) setEditingCustomer(null);
+        }}
+        customer={editingCustomer}
+        onSuccess={() => {
+          setEditingCustomer(null);
+          setPage(1);
+        }}
       />
     </div>
   );
