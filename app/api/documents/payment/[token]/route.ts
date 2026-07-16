@@ -4,8 +4,12 @@ import { db } from "@/db";
 import { payments } from "@/db/schema";
 import { loadShipmentDocumentData } from "@/lib/documents/load-shipment-document";
 import { buildPaymentReceiptHtml } from "@/lib/documents/receipt-template";
+import { htmlToPdf } from "@/lib/documents/render-pdf";
 
-/** Public download: payment receipt (same layout as invoice). */
+export const runtime = "nodejs";
+export const maxDuration = 60;
+
+/** Public download: payment receipt as a PDF file (same layout as invoice). */
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ token: string }> },
@@ -33,11 +37,12 @@ export async function GET(
     }
 
     const html = buildPaymentReceiptHtml(data, payment.id);
-    return new NextResponse(html, {
+    const pdf = await htmlToPdf(html);
+    return new NextResponse(pdf as unknown as BodyInit, {
       status: 200,
       headers: {
-        "Content-Type": "text/html; charset=utf-8",
-        "Content-Disposition": `attachment; filename="recu-paiement-${payment.id.slice(0, 8)}.html"`,
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="recu-paiement-${payment.id.slice(0, 8)}.pdf"`,
         "Cache-Control": "private, no-store",
       },
     });

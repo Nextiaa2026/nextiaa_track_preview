@@ -4,8 +4,12 @@ import { db } from "@/db";
 import { invoices } from "@/db/schema";
 import { loadShipmentDocumentData } from "@/lib/documents/load-shipment-document";
 import { buildAutoTransitInvoiceHtml } from "@/lib/documents/invoice-template";
+import { htmlToPdf } from "@/lib/documents/render-pdf";
 
-/** Public download: email link → full invoice HTML (print / save as PDF). */
+export const runtime = "nodejs";
+export const maxDuration = 60;
+
+/** Public download: email link → full invoice as a PDF file. */
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ token: string }> },
@@ -33,11 +37,12 @@ export async function GET(
     }
 
     const html = buildAutoTransitInvoiceHtml(data);
-    return new NextResponse(html, {
+    const pdf = await htmlToPdf(html);
+    return new NextResponse(pdf as unknown as BodyInit, {
       status: 200,
       headers: {
-        "Content-Type": "text/html; charset=utf-8",
-        "Content-Disposition": `attachment; filename="${invoice.invoiceNumber}.html"`,
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${invoice.invoiceNumber}.pdf"`,
         "Cache-Control": "private, no-store",
       },
     });

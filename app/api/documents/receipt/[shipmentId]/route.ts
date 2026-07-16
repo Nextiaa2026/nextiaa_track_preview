@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { loadShipmentDocumentData } from "@/lib/documents/load-shipment-document";
 import { buildShipmentReceiptHtml } from "@/lib/documents/receipt-template";
 import { verifyReceiptDownloadToken } from "@/lib/documents/receipt-token";
+import { htmlToPdf } from "@/lib/documents/render-pdf";
 
-/** Public download: shipment receipt via signed token. */
+export const runtime = "nodejs";
+export const maxDuration = 60;
+
+/** Public download: shipment receipt as a PDF file via signed token. */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ shipmentId: string }> },
@@ -22,11 +26,12 @@ export async function GET(
     }
 
     const html = buildShipmentReceiptHtml(data);
-    return new NextResponse(html, {
+    const pdf = await htmlToPdf(html);
+    return new NextResponse(pdf as unknown as BodyInit, {
       status: 200,
       headers: {
-        "Content-Type": "text/html; charset=utf-8",
-        "Content-Disposition": `attachment; filename="recu-${data.trackingNumber}.html"`,
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="recu-${data.trackingNumber}.pdf"`,
         "Cache-Control": "private, no-store",
       },
     });
