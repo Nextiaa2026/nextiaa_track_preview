@@ -16,7 +16,7 @@ export default function DashbaordLayout({
   return (
     <SidebarProvider defaultOpen={false}>
       <AppSidebar />
-      <SidebarInset>
+      <SidebarInset className="min-w-0">
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border-b border-gray-100 bg-white/50 backdrop-blur-md sticky top-0 z-30">
           <div className="flex flex-1 items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
@@ -28,7 +28,7 @@ export default function DashbaordLayout({
             <DashboardHeader />
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-4">{children}</div>
+        <div className="flex min-w-0 flex-1 flex-col gap-4 p-4 pt-4">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );

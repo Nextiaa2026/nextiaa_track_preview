@@ -37,7 +37,7 @@ export async function GET(
       status: 200,
       headers: {
         "Content-Type": "text/html; charset=utf-8",
-        "Content-Disposition": `inline; filename="recu-paiement-${payment.id.slice(0, 8)}.html"`,
+        "Content-Disposition": `attachment; filename="recu-paiement-${payment.id.slice(0, 8)}.html"`,
         "Cache-Control": "private, no-store",
       },
     });

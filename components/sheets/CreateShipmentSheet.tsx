@@ -39,6 +39,7 @@ import { generateTrackingNumber } from "@/lib/utils/shipment";
 import { formatCurrency } from "@/lib/utils/currency";
 import { useLocale } from "next-intl";
 import { toast } from "sonner";
+import { isAxiosError } from "axios";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -501,9 +502,15 @@ export function CreateShipmentSheet({
       },
       onError: (err) => {
         toast.dismiss(toastId);
-        toast.error(sw("toastCreateFailTitle"), {
-          description: err instanceof Error ? err.message : sw("toastTryAgain"),
-        });
+        const data = isAxiosError(err) ? err.response?.data : undefined;
+        const code = (data as { code?: string } | undefined)?.code;
+        const serverMessage = (data as { error?: string } | undefined)?.error;
+        const description =
+          code === "DUPLICATE_TRACKING_NUMBER"
+            ? sw("toastDuplicateTracking")
+            : serverMessage ||
+              (err instanceof Error ? err.message : sw("toastTryAgain"));
+        toast.error(sw("toastCreateFailTitle"), { description });
       },
     });
   };

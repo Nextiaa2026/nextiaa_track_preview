@@ -26,7 +26,7 @@ export async function GET(
       status: 200,
       headers: {
         "Content-Type": "text/html; charset=utf-8",
-        "Content-Disposition": `inline; filename="recu-${data.trackingNumber}.html"`,
+        "Content-Disposition": `attachment; filename="recu-${data.trackingNumber}.html"`,
         "Cache-Control": "private, no-store",
       },
     });

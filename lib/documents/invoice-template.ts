@@ -28,150 +28,99 @@ function money(amount: number): string {
 export function buildAutoTransitInvoiceHtml(data: ShipmentDocumentData): string {
   const paidTotal = data.payments.reduce((sum, p) => sum + p.amount, 0);
   const remaining = Math.max(0, data.shippingCost - paidTotal);
-  const vessel = data.vessel;
 
-  const paymentRows =
-    data.payments.length > 0
-      ? data.payments
-          .map(
-            (p) => `
-              <tr>
-                <td>${escapeHtml(formatDateFr(p.paidAt))}</td>
-                <td>${escapeHtml(p.reason)}</td>
-                <td class="num">${escapeHtml(String(p.amount))}</td>
-                <td>${escapeHtml(p.notes || "")}</td>
-              </tr>`,
-          )
-          .join("")
-      : `<tr><td colspan="4" style="text-align:center;color:#666;">Aucun paiement enregistré</td></tr>`;
+  // Règlement rows — dynamic payments, padded to keep the template's fixed shape.
+  const reglementRows: string[] = data.payments.map(
+    (p) => `
+            <tr>
+              <td>${escapeHtml(formatDateFr(p.paidAt))}</td>
+              <td class="num">${escapeHtml(String(p.amount))}</td>
+              <td></td>
+              <td>${escapeHtml(p.reason || p.notes || "")}</td>
+              <td class="num">${escapeHtml(String(p.amount))}</td>
+            </tr>`,
+  );
+  while (reglementRows.length < 3) {
+    reglementRows.push(
+      `            <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>`,
+    );
+  }
 
   return `<!doctype html>
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
   <title>Facture - ${escapeHtml(data.invoiceNumber)}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; }
     body {
-      font-family: "Inter", Arial, Helvetica, sans-serif;
+      font-family: "Times New Roman", Times, serif;
       margin: 0;
-      padding: 24px;
-      color: #111;
-      font-size: 13px;
-      line-height: 1.35;
+      padding: 32px 40px;
+      color: #000;
+      font-size: 14px;
+      line-height: 1.45;
     }
-    .doc { max-width: 820px; margin: 0 auto; }
-    .brand { text-align: center; margin-bottom: 18px; }
-    .brand .logo-mark {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 44px;
-      height: 44px;
-      margin: 0 auto 10px;
-      border-radius: 10px;
-      background: #1e3a8a;
-      color: #fff;
-      font-family: "Syne", Arial, Helvetica, sans-serif;
-      font-size: 15px;
-      font-weight: 800;
-      letter-spacing: 0.02em;
-    }
-    .brand .logo {
-      margin: 0;
-      font-family: "Syne", Arial, Helvetica, sans-serif;
-      font-size: 42px;
-      font-weight: 800;
-      letter-spacing: 0.1em;
+    .doc { max-width: 900px; margin: 0 auto; }
+
+    .brand { text-align: center; margin-bottom: 10px; }
+    .brand .title {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 46px;
+      font-weight: 900;
+      letter-spacing: 0.01em;
       text-transform: uppercase;
       line-height: 1;
-      color: #0a0a0a;
+      margin: 0;
     }
-    .brand h1 {
-      margin: 10px 0 0;
-      font-family: "Inter", Arial, Helvetica, sans-serif;
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-    .brand .tagline { margin: 6px 0 0; font-size: 12px; }
+    .brand .tagline { margin: 16px 0 0; font-size: 14px; }
     .brand .slogan {
-      margin: 4px 0 0;
-      font-size: 12px;
+      margin: 8px 0 0;
+      font-size: 20px;
       font-weight: 700;
-      text-decoration: underline;
-      text-transform: uppercase;
     }
-    table.box {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 14px;
+
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 24px;
+      margin: 14px 0 8px;
+      font-size: 15px;
     }
-    table.box th, table.box td {
-      border: 1px solid #111;
-      padding: 8px 10px;
+
+    table.box { width: 100%; border-collapse: collapse; margin-bottom: 18px; }
+    table.box td, table.box th {
+      border: 1px solid #000;
+      padding: 6px 8px;
       vertical-align: top;
+      font-size: 14px;
     }
     table.box th {
-      background: #f3f3f3;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    .party-label { font-weight: 700; font-size: 12px; margin-bottom: 6px; }
-    .party-line { margin: 2px 0; }
-    .party-line span { color: #444; }
-    .vehicle-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px 18px;
-      margin: 10px 0 4px;
-    }
-    .meta-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      margin: 12px 0;
-      font-weight: 700;
-    }
-    table.payments td.num { text-align: right; font-variant-numeric: tabular-nums; }
-    .totals {
-      width: 280px;
-      margin-left: auto;
-      margin-top: 12px;
-    }
-    .totals .row {
-      display: flex;
-      justify-content: space-between;
-      padding: 6px 0;
-      border-bottom: 1px solid #ddd;
-    }
-    .totals .row.strong {
-      font-weight: 800;
-      font-size: 15px;
-      border-bottom: 2px solid #111;
-      margin-top: 4px;
-    }
-    .observations {
-      margin-top: 18px;
-      padding: 10px;
-      border: 1px solid #111;
-      font-size: 10px;
-      color: #333;
-      text-align: justify;
-    }
-    .observations strong { display: block; margin-bottom: 6px; font-size: 11px; }
-    .footer {
-      margin-top: 16px;
       text-align: center;
-      font-size: 10px;
-      color: #444;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .party-line { margin: 8px 0; }
+    .spacer td { height: 14px; }
+    .vehicle-cell div { margin: 2px 0; }
+    .valeur { font-weight: 700; text-transform: uppercase; }
+
+    table.reglement td, table.reglement th { text-align: center; height: 26px; }
+    table.reglement .num { text-align: right; font-variant-numeric: tabular-nums; }
+    table.reglement .rgmt { font-weight: 700; }
+    table.reglement .lbl { font-weight: 700; }
+
+    table.obs td { border: 1px solid #000; padding: 8px 10px; font-size: 12px; text-align: justify; }
+    .obs-title { text-align: center; font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+
+    .footer {
+      margin-top: 22px;
+      text-align: center;
+      font-size: 11px;
       line-height: 1.5;
     }
+
     @media print {
       body { padding: 0; }
       .doc { max-width: none; }
@@ -181,114 +130,115 @@ export function buildAutoTransitInvoiceHtml(data: ShipmentDocumentData): string 
 <body>
   <div class="doc">
     <div class="brand">
-      <div class="logo-mark">2N</div>
-      <div class="logo">2NP</div>
-      ${data.companyName && data.companyName.trim().toUpperCase() !== "2NP"
-        ? `<h1>${escapeHtml(data.companyName)}</h1>`
-        : ""}
-      <p class="tagline">Spécialiste de l'envoi de véhicules vers l'Afrique</p>
-      <p class="slogan">Le meilleur service à prix compétitif</p>
+      <p class="title">${escapeHtml(data.companyName?.trim() || "AUTO TRANSIT 3N")}</p>
+      <p class="tagline">Spécialiste de l'envoi&nbsp;&nbsp;&nbsp;&nbsp;de véhicules vers l'Afrique</p>
+      <p class="slogan">LE MEILLEUR SERVICE A PRIX COMPETITIF</p>
+    </div>
+
+    <div class="meta">
+      <div>FACTURE N° : ${escapeHtml(data.invoiceNumber)}</div>
+      <div>Date&nbsp;&nbsp;${escapeHtml(formatDateFr(data.issuedAt))}</div>
     </div>
 
     <table class="box">
       <thead>
         <tr>
           <th style="width:50%">Expéditeur</th>
-          <th style="width:50%">Destinataire</th>
+          <th style="width:50%">Destinateur</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td>
-            <div class="party-line"><span>Nom et Prénom :</span> <strong>${escapeHtml(data.sender.name)}</strong></div>
-            <div class="party-line"><span>Adresse :</span> ${escapeHtml(data.sender.address)}</div>
-            <div class="party-line"><span>Ville :</span> ${escapeHtml([data.sender.zipCode, data.sender.city].filter(Boolean).join(" "))}</div>
-            <div class="party-line"><span>Pays :</span> ${escapeHtml(data.sender.country)}</div>
-            <div class="party-line"><span>Téléphone :</span> ${escapeHtml(data.sender.phone)}</div>
+            <div class="party-line">Nom et Prénom: <strong>${escapeHtml(data.sender.name)}</strong></div>
+            <div class="party-line">Adresse : ${escapeHtml(data.sender.address)}</div>
+            <div class="party-line">Ville : ${escapeHtml([data.sender.zipCode, data.sender.city].filter(Boolean).join(" "))}</div>
+            <div class="party-line">Pays : ${escapeHtml(data.sender.country)}</div>
+            <div class="party-line">Téléphone : ${escapeHtml(data.sender.phone)}</div>
           </td>
           <td>
-            <div class="party-line"><span>Nom et Prénom :</span> <strong>${escapeHtml(data.receiver.name)}</strong></div>
-            <div class="party-line"><span>Adresse :</span> ${escapeHtml(data.receiver.address)}</div>
-            <div class="party-line"><span>Code Post :</span> ${escapeHtml(data.receiver.zipCode || "")}</div>
-            <div class="party-line"><span>Ville :</span> ${escapeHtml(data.receiver.city)}</div>
-            <div class="party-line"><span>Pays :</span> ${escapeHtml(data.receiver.country)}</div>
-            <div class="party-line"><span>Téléphone :</span> ${escapeHtml(data.receiver.phone)}</div>
+            <div class="party-line">Nom et Prénom: <strong>${escapeHtml(data.receiver.name)}</strong></div>
+            <div class="party-line">Adresse : ${escapeHtml(data.receiver.address)}</div>
+            <div class="party-line">Code Post : ${escapeHtml(data.receiver.zipCode || "")}</div>
+            <div class="party-line">Ville : ${escapeHtml(data.receiver.city)}</div>
+            <div class="party-line">Pays : ${escapeHtml(data.receiver.country)}</div>
+            <div class="party-line">Téléphone : ${escapeHtml(data.receiver.phone)}</div>
+          </td>
+        </tr>
+        <tr class="spacer"><td></td><td></td></tr>
+        <tr>
+          <td class="vehicle-cell">
+            <div>-IMMAT: ${escapeHtml(data.registrationNumber || "")}</div>
+            <div>&nbsp;-MARQUE : ${escapeHtml(data.itemName)}</div>
+            <div>-CHASSIS : ${escapeHtml(data.chassisNumber)}</div>
+          </td>
+          <td></td>
+        </tr>
+        <tr>
+          <td colspan="2" class="valeur">VALEUR D ACHAT : ${escapeHtml(data.purchaseValue || "")}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table class="box reglement">
+      <tbody>
+        <tr>
+          <td colspan="2"></td>
+          <td class="rgmt">Règlement</td>
+          <td colspan="2"></td>
+        </tr>
+        <tr>
+          <td style="width:18%">Date</td>
+          <td style="width:20%">Prix transport</td>
+          <td style="width:20%">Prime assurance</td>
+          <td style="width:20%">Mode</td>
+          <td style="width:22%">Total</td>
+        </tr>
+${reglementRows.join("\n")}
+        <tr>
+          <td></td>
+          <td class="lbl">Acompte :</td>
+          <td class="lbl">Reste:</td>
+          <td class="lbl">Total&nbsp;&nbsp;HT</td>
+          <td class="num">${escapeHtml(money(data.shippingCost))}</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td class="num">${escapeHtml(String(paidTotal))}</td>
+          <td class="num">${escapeHtml(String(remaining))}</td>
+          <td class="lbl">Reste à payer</td>
+          <td class="num">${escapeHtml(money(remaining))}</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td class="lbl"><strong>Net à payer</strong></td>
+          <td class="num"><strong>${escapeHtml(money(data.shippingCost))}</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table class="obs">
+      <tbody>
+        <tr>
+          <td>
+            <div class="obs-title">Observations</div>
+            Les dates de départ sont données à titre indicatifs et peuvent être modifiées ou annulées
+            (bon de commande exonéré de TVA) : Art 256-III, et suivants, 283-2 du code général des impôts.
+            Les acomptes sont valables un(1) mois. Tout fret non payé un(1) mois après l'émission du
+            connaissement fera l'objet d'une vente de la marchandise.
           </td>
         </tr>
       </tbody>
     </table>
-
-    <table class="box">
-      <thead>
-        <tr><th colspan="2">Véhicule &amp; transport</th></tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td colspan="2">
-            <div class="vehicle-grid">
-              <div><strong>- IMMAT :</strong> ${escapeHtml(data.registrationNumber || "—")}</div>
-              <div><strong>- MARQUE :</strong> ${escapeHtml(data.itemName)}</div>
-              <div><strong>- CHASSIS :</strong> ${escapeHtml(data.chassisNumber)}</div>
-              <div><strong>- VALEUR D'ACHAT :</strong> ${escapeHtml(data.purchaseValue || "")}</div>
-              <div><strong>- TRANSPORTEUR :</strong> ${escapeHtml(vessel?.carrierName || "—")}</div>
-              <div><strong>- NOM DU BATEAU :</strong> ${escapeHtml(vessel?.boatName || "—")}</div>
-              <div><strong>- N° BATEAU (IMO) :</strong> ${escapeHtml(vessel?.boatNumber || "—")}</div>
-              <div><strong>- TRAJET :</strong> ${escapeHtml(data.tripName || "—")}</div>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="meta-row">
-      <div>FACTURE N° : ${escapeHtml(data.invoiceNumber)}</div>
-      <div>Date : ${escapeHtml(formatDateFr(data.issuedAt))}</div>
-    </div>
-
-    <table class="box payments">
-      <thead>
-        <tr>
-          <th>Date de paiement</th>
-          <th>Raison</th>
-          <th>Montant</th>
-          <th>Notes</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${paymentRows}
-        <tr>
-          <td colspan="2"><strong>Prix transport</strong></td>
-          <td class="num" colspan="2"><strong>${escapeHtml(String(data.shippingCost))}</strong></td>
-        </tr>
-        <tr>
-          <td colspan="2">Total payé (acomptes)</td>
-          <td class="num" colspan="2">${escapeHtml(String(paidTotal))}</td>
-        </tr>
-        <tr>
-          <td colspan="2"><strong>Reste</strong></td>
-          <td class="num" colspan="2"><strong>${escapeHtml(String(remaining))}</strong></td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="totals">
-      <div class="row"><span>Total HT</span><span>${escapeHtml(money(data.shippingCost))}</span></div>
-      <div class="row"><span>Reste à payer</span><span>${escapeHtml(money(remaining))}</span></div>
-      <div class="row strong"><span>Net à payer</span><span>${escapeHtml(money(data.shippingCost))}</span></div>
-    </div>
-
-    <div class="observations">
-      <strong>Observations</strong>
-      Les dates de départ sont données à titre indicatif. Conformément à l'Art 256-III du CGI,
-      les acomptes sont valables un mois. Le fret non soldé un mois après l'émission du connaissement
-      peut entraîner la vente de la marchandise. Suivi : ${escapeHtml(data.trackingNumber)}.
-    </div>
 
     <div class="footer">
-      <strong>${escapeHtml(data.companyName || "2NP")}</strong><br/>
-      14 AVENUE DU 8 MAI 1945 — 95200 SARCELLES — France<br/>
-      Capital 3.000 € — SIRET 932857212 RCS PONTOISE — TVA FR 10932857212<br/>
-      info2npimportexport@yahoo.com
+      SAS AUTO TRANSIT 3N<br/>
+      Siège social : 14 AVENUE DU 8 MAI 1945 95200 SARCELLES– France<br/>
+      Capital social : 3.000€ - Siret : 932857212 RCS  R.C.S PONTOISE<br/>
+      TVA Intracommunautaire : FR 10932857212<br/>
+      Infoline : 00 33 (1) 60547593  / 0033669180375 mail : info2npimportexport@yahoo.com
     </div>
   </div>
 </body>

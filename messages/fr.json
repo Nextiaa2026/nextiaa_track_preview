@@ -229,6 +229,7 @@
       "toastTryAgain": "Veuillez réessayer",
       "toastRegistered": "Expédition enregistrée",
       "toastCreateFailTitle": "Échec de la création",
+      "toastDuplicateTracking": "Une expédition avec ce numéro de suivi existe déjà. Veuillez utiliser un autre numéro de suivi.",
       "placeholderSender": "Choisir un expéditeur…",
       "placeholderReceiver": "Choisir un destinataire…",
       "vesselSearch": "Rechercher et sélectionner un transport",

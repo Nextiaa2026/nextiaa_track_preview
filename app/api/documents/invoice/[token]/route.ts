@@ -37,7 +37,7 @@ export async function GET(
       status: 200,
       headers: {
         "Content-Type": "text/html; charset=utf-8",
-        "Content-Disposition": `inline; filename="${invoice.invoiceNumber}.html"`,
+        "Content-Disposition": `attachment; filename="${invoice.invoiceNumber}.html"`,
         "Cache-Control": "private, no-store",
       },
     });

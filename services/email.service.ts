@@ -110,15 +110,15 @@ function renderEmailLayout(params: {
   ctaHref?: string;
 }): string {
   const badge = params.statusBadge
-    ? `<span style="display:inline-block; margin-bottom:12px; padding:6px 10px; border-radius:9999px; background:#eff6ff; color:#1d4ed8; font-size:12px; font-weight:600;">${escapeHtml(params.statusBadge)}</span>`
+    ? `<span style="display:inline-block; margin-bottom:12px; padding:6px 10px; background:#eff6ff; color:#1d4ed8; font-size:12px; font-weight:600;">${escapeHtml(params.statusBadge)}</span>`
     : "";
   const highlight = params.highlightMessage
-    ? `<div style="margin-top:16px; border:1px solid #e2e8f0; background:#f8fafc; border-radius:10px; padding:12px 14px; color:#334155; font-size:13px; line-height:1.55;">${escapeHtml(params.highlightMessage)}</div>`
+    ? `<div style="margin-top:16px; border:1px solid #e2e8f0; background:#f8fafc; padding:12px 14px; color:#334155; font-size:13px; line-height:1.55;">${escapeHtml(params.highlightMessage)}</div>`
     : "";
   const cta =
     params.ctaLabel && params.ctaHref
       ? `<div style="margin-top:20px;">
-          <a href="${escapeHtml(params.ctaHref)}" style="display:inline-block; background:#2563eb; color:#ffffff; text-decoration:none; font-weight:600; font-size:13px; padding:10px 16px; border-radius:8px;">
+          <a href="${escapeHtml(params.ctaHref)}" download style="display:inline-block; background:#2563eb; color:#ffffff; text-decoration:none; font-weight:600; font-size:13px; padding:10px 16px;">
             ${escapeHtml(params.ctaLabel)}
           </a>
         </div>`
@@ -137,7 +137,7 @@ function renderEmailLayout(params: {
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="padding:24px 12px;">
       <tr>
         <td align="center">
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px; background:#ffffff; border-radius:14px; overflow:hidden; border:1px solid #e2e8f0;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px; background:#ffffff; overflow:hidden; border:1px solid #e2e8f0;">
             <tr>
               <td style="padding:18px 22px; background:linear-gradient(90deg,#1d4ed8,#2563eb); color:#ffffff;">
                 <div style="font-size:12px; letter-spacing:0.18em; text-transform:uppercase; opacity:0.9; font-weight:700;">2NP</div>
@@ -181,7 +181,7 @@ function buildDocumentSection(title: string, bodyHtml: string): string {
   return `
     <div style="margin-top:18px;">
       <div style="margin-bottom:8px; color:#0f172a; font-size:13px; font-weight:700;">${escapeHtml(title)}</div>
-      <div style="border:1px solid #e2e8f0; border-radius:10px; background:#ffffff; overflow:hidden;">
+      <div style="border:1px solid #e2e8f0; background:#ffffff; overflow:hidden;">
         <div style="max-height:260px; overflow:auto; padding:12px;">
           ${sanitizeEmailFragment(bodyHtml)}
         </div>
@@ -341,10 +341,10 @@ export const emailService = {
         highlightMessage: data.statusSummary,
         sectionsHtml: `
           <div style="margin-top:18px;">
-            <a href="${escapeHtml(data.invoiceDownloadUrl)}" style="display:inline-block; margin:0 8px 8px 0; background:#2563eb; color:#ffffff; text-decoration:none; font-weight:600; font-size:13px; padding:10px 16px; border-radius:8px;">
+            <a href="${escapeHtml(data.invoiceDownloadUrl)}" download style="display:inline-block; margin:0 8px 8px 0; background:#2563eb; color:#ffffff; text-decoration:none; font-weight:600; font-size:13px; padding:10px 16px;">
               Télécharger la facture
             </a>
-            <a href="${escapeHtml(data.receiptDownloadUrl)}" style="display:inline-block; margin:0 8px 8px 0; background:#0f172a; color:#ffffff; text-decoration:none; font-weight:600; font-size:13px; padding:10px 16px; border-radius:8px;">
+            <a href="${escapeHtml(data.receiptDownloadUrl)}" download style="display:inline-block; margin:0 8px 8px 0; background:#1d4ed8; color:#ffffff; text-decoration:none; font-weight:600; font-size:13px; padding:10px 16px;">
               Télécharger le reçu
             </a>
           </div>

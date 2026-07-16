@@ -35,26 +35,51 @@ export function generateTripName(): string {
 }
 
 /**
- * Generate a unique tracking number
- * Format: TRK-YYYYMMDD-XXXXX
+ * Generate a 3-digit cryptographically-strong random string.
+ * Falls back to Math.random when the Web Crypto API is unavailable.
+ */
+function random3Digits(): string {
+  const cryptoObj =
+    typeof globalThis !== "undefined"
+      ? (globalThis.crypto as Crypto | undefined)
+      : undefined;
+  if (cryptoObj?.getRandomValues) {
+    const buf = new Uint32Array(1);
+    cryptoObj.getRandomValues(buf);
+    return String(buf[0] % 1000).padStart(3, "0");
+  }
+  return String(Math.floor(Math.random() * 1000)).padStart(3, "0");
+}
+
+/**
+ * Generate a unique tracking number.
+ * Format: TRK-YYYYMMDD-MMMMMMMMRRR
+ * The suffix combines milliseconds-since-midnight (8 digits, unique per ms
+ * within the day) with 3 random digits, making same-day collisions on the
+ * `shipments_tracking_number_unique` constraint virtually impossible.
  */
 export function generateTrackingNumber(): string {
   const date = new Date();
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
-  const random = Math.floor(Math.random() * 100000)
-    .toString()
-    .padStart(5, "0");
 
-  return `TRK-${year}${month}${day}-${random}`;
+  const msSinceMidnight =
+    date.getHours() * 3_600_000 +
+    date.getMinutes() * 60_000 +
+    date.getSeconds() * 1_000 +
+    date.getMilliseconds();
+  const timePart = String(msSinceMidnight).padStart(8, "0");
+
+  return `TRK-${year}${month}${day}-${timePart}${random3Digits()}`;
 }
 
 /**
  * Validate tracking number format
  */
 export function isValidTrackingNumber(trackingNumber: string): boolean {
-  const trackingRegex = /^TRK-\d{8}-\d{5}$/;
+  // Accepts legacy 5-digit suffixes and the current time-based (11-digit) suffix.
+  const trackingRegex = /^TRK-\d{8}-\d{5,}$/;
   return trackingRegex.test(trackingNumber);
 }
 

@@ -421,7 +421,7 @@ export default function ShipmentsPage() {
                 value={tripFilter || "__all__"}
                 onValueChange={(v) => { setTripFilter(v === "__all__" ? "" : v); setPage(1); }}
               >
-                <SelectTrigger className="h-10 rounded-xl border-gray-200 bg-white text-sm w-full sm:min-w-[160px]">
+                <SelectTrigger className="h-10 rounded-xl border-gray-200 bg-white text-sm w-full sm:w-[180px]">
                   <SelectValue placeholder={t("filterAllTrips")} />
                 </SelectTrigger>
                 <SelectContent>

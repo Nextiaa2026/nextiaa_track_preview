@@ -229,6 +229,7 @@
       "toastTryAgain": "Please try again",
       "toastRegistered": "Shipment registered",
       "toastCreateFailTitle": "Creation failed",
+      "toastDuplicateTracking": "A shipment with this tracking number already exists. Please use a different tracking number.",
       "placeholderSender": "Choose a sender...",
       "placeholderReceiver": "Choose a receiver...",
       "vesselSearch": "Search and select transport",

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ZodError } from "zod";
 import { shipmentSchema } from "@/lib/validations";
 import { db } from "@/db";
 import { shipments, customers, invoices, trips } from "@/db/schema";
@@ -227,6 +228,33 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ shipment: newShipment }, { status: 201 });
   } catch (error) {
     console.error("Create shipment error:", error);
+
+    // Zod validation errors — surface the first readable message.
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        { error: error.issues[0]?.message ?? "Validation failed", code: "VALIDATION_ERROR" },
+        { status: 400 },
+      );
+    }
+
+    // Postgres unique constraint violation (23505).
+    const pgError = error as { code?: string; constraint_name?: string };
+    if (pgError?.code === "23505") {
+      if (pgError.constraint_name === "shipments_tracking_number_unique") {
+        return NextResponse.json(
+          {
+            error: "A shipment with this tracking number already exists.",
+            code: "DUPLICATE_TRACKING_NUMBER",
+          },
+          { status: 409 },
+        );
+      }
+      return NextResponse.json(
+        { error: "A shipment with these details already exists.", code: "DUPLICATE_RECORD" },
+        { status: 409 },
+      );
+    }
+
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }
