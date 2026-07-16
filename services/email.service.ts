@@ -47,6 +47,31 @@ export interface VesselStatusUpdateEmail {
   message: string;
 }
 
+export interface PaymentInvoiceEmail {
+  recipient: EmailRecipient;
+  trackingNumber: string;
+  itemName: string;
+  amount: string;
+  reason: string;
+  paidAt: string;
+  invoiceNumber: string;
+  downloadUrl: string;
+  invoiceHtml?: string;
+}
+
+export interface DocumentLinkEmail {
+  recipient: EmailRecipient;
+  trackingNumber: string;
+  itemName: string;
+  senderName: string;
+  receiverName: string;
+  estimatedDelivery?: string;
+  status: string;
+  statusSummary: string;
+  invoiceDownloadUrl: string;
+  receiptDownloadUrl: string;
+}
+
 function escapeHtml(value: string): string {
   return value
     .replaceAll("&", "&amp;")
@@ -251,6 +276,96 @@ function generateVesselStatusUpdateTemplate(data: VesselStatusUpdateEmail): stri
 }
 
 export const emailService = {
+  /**
+   * Send payment confirmation with invoice download link.
+   */
+  sendPaymentInvoiceEmail: async (data: PaymentInvoiceEmail) => {
+    try {
+      const paidDate = new Date(data.paidAt).toLocaleDateString("fr-FR");
+      const html = renderEmailLayout({
+        previewText: `Paiement enregistré — ${data.trackingNumber}`,
+        title: "Paiement enregistré — Facture",
+        greetingName: data.recipient.name,
+        intro:
+          "Un paiement a été enregistré pour votre expédition. Cliquez sur le bouton ci-dessous pour télécharger la facture mise à jour.",
+        statusBadge: data.reason,
+        rows: [
+          { label: "Numéro de suivi", value: data.trackingNumber },
+          { label: "Article", value: data.itemName },
+          { label: "Facture", value: data.invoiceNumber },
+          { label: "Montant payé", value: `${data.amount} €` },
+          { label: "Raison", value: data.reason },
+          { label: "Date", value: paidDate },
+        ],
+        sectionsHtml: data.invoiceHtml
+          ? buildDocumentSection("Aperçu de la facture", data.invoiceHtml)
+          : undefined,
+        ctaLabel: "Télécharger la facture",
+        ctaHref: data.downloadUrl,
+      });
+
+      const { error } = await resend.emails.send({
+        from: "Nexiaa Track <contact@ginfos.site>",
+        to: data.recipient.email,
+        subject: `Facture — paiement ${data.reason} pour ${data.trackingNumber}`,
+        html,
+      });
+
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      console.error("Failed to send payment invoice email:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Send shipment packet with download links (invoice + receipt).
+   */
+  sendShipmentDocumentLinksEmail: async (data: DocumentLinkEmail) => {
+    try {
+      const html = renderEmailLayout({
+        previewText: `Documents ${data.trackingNumber}`,
+        title: "Documents d'expédition",
+        greetingName: data.recipient.name,
+        intro:
+          "Votre dossier d'expédition est prêt. Utilisez les liens ci-dessous pour télécharger le reçu et la facture.",
+        statusBadge: data.status,
+        rows: [
+          { label: "Numéro de suivi", value: data.trackingNumber },
+          { label: "Article", value: data.itemName },
+          { label: "Expéditeur", value: data.senderName },
+          { label: "Destinataire", value: data.receiverName },
+          { label: "Livraison estimée", value: data.estimatedDelivery },
+        ],
+        highlightMessage: data.statusSummary,
+        sectionsHtml: `
+          <div style="margin-top:18px;">
+            <a href="${escapeHtml(data.invoiceDownloadUrl)}" style="display:inline-block; margin:0 8px 8px 0; background:#2563eb; color:#ffffff; text-decoration:none; font-weight:600; font-size:13px; padding:10px 16px; border-radius:8px;">
+              Télécharger la facture
+            </a>
+            <a href="${escapeHtml(data.receiptDownloadUrl)}" style="display:inline-block; margin:0 8px 8px 0; background:#0f172a; color:#ffffff; text-decoration:none; font-weight:600; font-size:13px; padding:10px 16px; border-radius:8px;">
+              Télécharger le reçu
+            </a>
+          </div>
+        `,
+      });
+
+      const { error } = await resend.emails.send({
+        from: "Nexiaa Track <contact@ginfos.site>",
+        to: data.recipient.email,
+        subject: `Expédition ${data.trackingNumber} : facture et reçu`,
+        html,
+      });
+
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      console.error("Failed to send document links email:", error);
+      throw error;
+    }
+  },
+
   /**
    * Send shipment created notification
    * Sent to both sender and receiver when a shipment is created

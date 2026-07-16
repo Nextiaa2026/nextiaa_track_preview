@@ -22,7 +22,7 @@ interface SettingsContextType {
 }
 
 const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
-  companyName: "Nexiaa Track Logistics",
+  companyName: "2NP",
   currency: "EUR",
   taxRate: 0,
   autoNotifyOnCreate: false,

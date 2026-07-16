@@ -265,3 +265,43 @@ export const useInvoices = (
     queryFn: () => shipmentService.getInvoices(page, pageSize, search, status, startDate, endDate),
   });
 };
+
+export const usePrintInvoice = () => {
+  return useMutation({
+    mutationFn: (invoiceId: string) => shipmentService.printInvoice(invoiceId),
+  });
+};
+
+export const usePrintShipmentInvoice = () => {
+  return useMutation({
+    mutationFn: (shipmentId: string) => shipmentService.printShipmentInvoice(shipmentId),
+  });
+};
+
+// ─── Payments ─────────────────────────────────────────────────────────────────
+
+export const usePayments = (shipmentId: string, options?: { enabled?: boolean }) => {
+  return useQuery({
+    queryKey: ["payments", shipmentId],
+    queryFn: () => shipmentService.getPayments(shipmentId),
+    enabled: options?.enabled ?? !!shipmentId,
+  });
+};
+
+export const useCreatePayment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      shipmentId,
+      data,
+    }: {
+      shipmentId: string;
+      data: import("@/services/shipment.service").PaymentInput;
+    }) => shipmentService.createPayment(shipmentId, data),
+    onSuccess: (_, { shipmentId }) => {
+      queryClient.invalidateQueries({ queryKey: ["payments", shipmentId] });
+      queryClient.invalidateQueries({ queryKey: ["shipment", shipmentId] });
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+    },
+  });
+};

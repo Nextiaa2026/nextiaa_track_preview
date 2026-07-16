@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useInvoices } from "@/hooks/useShipments";
+import { useInvoices, usePrintInvoice } from "@/hooks/useShipments";
 import { useDebounce } from "@/hooks/use-debounce";
 import type { Invoice } from "@/services/shipment.service";
 import { format } from "date-fns";
@@ -36,6 +36,7 @@ import { toast } from "sonner";
 import { useTranslations, useLocale } from "next-intl";
 import { useSettings } from "@/providers/SettingsProvider";
 import { formatCurrency } from "@/lib/utils/currency";
+import { openPrintHtml } from "@/lib/print-shipment-documents";
 
 const STATUS_OPTIONS = ["all", "draft", "issued", "paid", "overdue", "cancelled"] as const;
 
@@ -80,6 +81,18 @@ export default function InvoicesPage() {
   );
 
   const invoices = useMemo(() => paginatedData?.data || [], [paginatedData]);
+  const { mutateAsync: printInvoice, isPending: isPrinting } = usePrintInvoice();
+
+  const handlePrintInvoice = async (invoiceId: string) => {
+    try {
+      const { html } = await printInvoice(invoiceId);
+      if (!openPrintHtml(html)) {
+        toast.error(t("printFailed"));
+      }
+    } catch {
+      toast.error(t("printFailed"));
+    }
+  };
 
   const columns = useMemo<ColumnDef<Invoice>[]>(
     () => [
@@ -88,9 +101,15 @@ export default function InvoicesPage() {
         header: t("colInvoice"),
         cell: ({ row }) => (
           <div className="flex items-center gap-3">
-            <div className="size-8 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-black shrink-0 shadow-sm">
+            <button
+              type="button"
+              title={t("printInvoice")}
+              disabled={isPrinting}
+              onClick={() => void handlePrintInvoice(row.original.id)}
+              className="size-8 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-black shrink-0 shadow-sm hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-colors"
+            >
                <HugeiconsIcon icon={Invoice01Icon} size={16} />
-            </div>
+            </button>
             <div className="flex flex-col">
               <span className="text-black font-medium leading-none mb-1">{row.original.invoiceNumber}</span>
               <span className="text-[10px] text-gray-400 font-normal uppercase tracking-wider">
@@ -167,6 +186,11 @@ export default function InvoicesPage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem
+                onClick={() => void handlePrintInvoice(row.original.id)}
+              >
+                {t("printInvoice")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
                 onClick={() => {
                   navigator.clipboard.writeText(row.original.invoiceNumber);
                   toast.success(t("copySuccess"));
@@ -188,7 +212,7 @@ export default function InvoicesPage() {
         ),
       },
     ],
-    [router, t, settings.currency, locale, tis],
+    [router, t, settings.currency, locale, tis, isPrinting],
   );
 
   return (

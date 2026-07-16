@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 const vesselPatchSchema = z.object({
+  carrierName: z.string().min(1).optional(),
   name: z.string().min(2).optional(),
   imo: z.string().min(3).optional(),
   type: z.string().min(2).optional(),

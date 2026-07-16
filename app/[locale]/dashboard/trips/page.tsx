@@ -229,7 +229,10 @@ export default function TripsPage() {
             </Link>
             {row.original.vessel && (
               <span className="text-[10px] text-gray-400 truncate">
-                {row.original.vessel.name} · {row.original.vessel.imo}
+                {row.original.vessel.carrierName
+                  ? `${row.original.vessel.carrierName} — ${row.original.vessel.name}`
+                  : row.original.vessel.name}{" "}
+                · {row.original.vessel.imo}
               </span>
             )}
           </div>
@@ -431,7 +434,7 @@ export default function TripsPage() {
                           <SelectItem value="__none__">{t("fieldVesselNone")}</SelectItem>
                           {vessels.map((v) => (
                             <SelectItem key={v.id} value={v.id}>
-                              {v.name} · {v.imo}
+                              {v.carrierName ? `${v.carrierName} — ${v.name}` : v.name} · {v.imo}
                             </SelectItem>
                           ))}
                         </SelectContent>

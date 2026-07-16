@@ -5,9 +5,14 @@ import { shipments, customers, invoices, trips } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { count, or, ilike, sql, and, gte, lte, eq, SQL } from "drizzle-orm";
 import { emailService } from "@/services/email.service";
-import { buildReceiptHtml } from "@/lib/print-shipment-documents";
-import { buildInvoiceHtml } from "@/lib/invoice";
 import { getStatusDisplay } from "@/lib/utils/shipment";
+import {
+  createDownloadToken,
+  getAppBaseUrl,
+  invoiceDownloadUrl,
+  receiptDownloadUrl,
+} from "@/lib/document-tokens";
+import { signReceiptDownloadToken } from "@/lib/documents/receipt-token";
 
 export async function GET(request: NextRequest) {
   try {
@@ -159,7 +164,8 @@ export async function POST(request: NextRequest) {
     const issueDate = new Date();
     const dueDate = new Date(issueDate);
     dueDate.setDate(dueDate.getDate() + 14);
-    await db.insert(invoices).values({
+    const invoiceToken = createDownloadToken();
+    const [createdInvoice] = await db.insert(invoices).values({
       invoiceNumber: `INV-${shipmentId}-${Date.now()}`,
       shipmentId,
       senderId,
@@ -172,7 +178,8 @@ export async function POST(request: NextRequest) {
       issuedAt: issueDate,
       dueDate,
       notes: "Facture générée automatiquement lors de la création de l'expédition.",
-    });
+      downloadToken: invoiceToken,
+    }).returning();
 
     if (notifyPartiesByEmail) {
       try {
@@ -182,25 +189,8 @@ export async function POST(request: NextRequest) {
         ]);
 
         if (sender && receiver) {
-          const receipt = {
-            receiptNumber: `RCPT-${shipmentId}`,
-            issuedAt: new Date().toISOString(),
-            shipment: {
-              id: shipmentId,
-              trackingNumber: newShipment.trackingNumber,
-              chassisNumber: newShipment.chassisNumber,
-              itemName: newShipment.itemName,
-              itemWeight: newShipment.itemWeight || "N/A",
-              status: newShipment.status,
-              createdAt: newShipment.createdAt.toISOString(),
-              shippingCost: newShipment.shippingCost,
-            },
-            sender,
-            receiver,
-          };
-
-          const receiptHtml = buildReceiptHtml(receipt);
-          const invoiceHtml = buildInvoiceHtml(receipt);
+          const baseUrl = getAppBaseUrl(request.url);
+          const receiptToken = await signReceiptDownloadToken(shipmentId);
           const statusSummary = `L'expédition ${newShipment.trackingNumber} est actuellement ${getStatusDisplay(newShipment.status)}.`;
           const recipients = [
             { name: sender.name, email: sender.email },
@@ -209,7 +199,7 @@ export async function POST(request: NextRequest) {
 
           await Promise.all(
             recipients.map((recipient) =>
-              emailService.sendShipmentPacketEmail({
+              emailService.sendShipmentDocumentLinksEmail({
                 recipient,
                 trackingNumber: newShipment.trackingNumber,
                 itemName: newShipment.itemName,
@@ -220,8 +210,11 @@ export async function POST(request: NextRequest) {
                   : undefined,
                 status: newShipment.status,
                 statusSummary,
-                receiptHtml,
-                invoiceHtml,
+                invoiceDownloadUrl: invoiceDownloadUrl(
+                  createdInvoice.downloadToken,
+                  baseUrl,
+                ),
+                receiptDownloadUrl: receiptDownloadUrl(shipmentId, receiptToken, baseUrl),
               }),
             ),
           );

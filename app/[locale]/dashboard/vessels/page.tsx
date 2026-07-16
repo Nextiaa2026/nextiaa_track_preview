@@ -54,6 +54,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 // ─── Vessel form schema ───────────────────────────────────────────────────────
 
 const vesselFormSchema = z.object({
+  carrierName: z.string().min(1),
   name: z.string().min(2),
   imo: z.string().min(3),
   type: z.string().min(1),
@@ -102,14 +103,14 @@ export default function VesselsPage() {
 
   const form = useForm<VesselFormValues>({
     resolver: zodResolver(vesselFormSchema),
-    defaultValues: { name: "", imo: "", type: "ship", customType: "" },
+    defaultValues: { carrierName: "", name: "", imo: "", type: "ship", customType: "" },
   });
 
   const watchedType = form.watch("type");
 
   const openCreate = () => {
     setEditingVessel(null);
-    form.reset({ name: "", imo: "", type: "ship", customType: "" });
+    form.reset({ carrierName: "", name: "", imo: "", type: "ship", customType: "" });
     setSheetOpen(true);
   };
 
@@ -117,6 +118,7 @@ export default function VesselsPage() {
     setEditingVessel(vessel);
     const isKnown = vesselTypeOptions.includes(vessel.type.toLowerCase() as typeof DEFAULT_VESSEL_TYPES[number]);
     form.reset({
+      carrierName: vessel.carrierName || "",
       name: vessel.name,
       imo: vessel.imo,
       type: isKnown ? vessel.type.toLowerCase() : "__custom__",
@@ -139,11 +141,21 @@ export default function VesselsPage() {
       if (editingVessel) {
         await updateVessel({
           id: editingVessel.id,
-          data: { name: values.name.trim(), imo: values.imo.trim(), type: finalType },
+          data: {
+            carrierName: values.carrierName.trim(),
+            name: values.name.trim(),
+            imo: values.imo.trim(),
+            type: finalType,
+          },
         });
         toast.success(t("saveSuccess"));
       } else {
-        await createVessel({ name: values.name.trim(), imo: values.imo.trim(), type: finalType });
+        await createVessel({
+          carrierName: values.carrierName.trim(),
+          name: values.name.trim(),
+          imo: values.imo.trim(),
+          type: finalType,
+        });
         toast.success(t("createSuccess"));
       }
       setSheetOpen(false);
@@ -156,6 +168,13 @@ export default function VesselsPage() {
 
   const columns = useMemo<ColumnDef<Vessel>[]>(
     () => [
+      {
+        accessorKey: "carrierName",
+        header: t("colCarrier"),
+        cell: ({ row }) => (
+          <span className="font-medium text-black">{row.original.carrierName || "—"}</span>
+        ),
+      },
       {
         accessorKey: "name",
         header: t("colName"),
@@ -268,12 +287,26 @@ export default function VesselsPage() {
               <form id="vessel-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                 <FormField
                   control={form.control}
+                  name="carrierName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("fieldCarrier")}</FormLabel>
+                      <FormControl>
+                        <Input placeholder={t("carrierPlaceholder")} className="h-11 rounded-lg" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
                         <FormLabel>{t("fieldName")}</FormLabel>
                         <FormControl>
-                          <Input placeholder="Ex. : CMA CGM MARCO POLO" className="h-11 rounded-lg" {...field} />
+                          <Input placeholder={t("namePlaceholder")} className="h-11 rounded-lg" {...field} />
                         </FormControl>
                         <FormMessage>
                           {form.formState.errors.name && tv("nameRequired")}
@@ -289,8 +322,9 @@ export default function VesselsPage() {
                     <FormItem>
                         <FormLabel>{t("fieldImo")}</FormLabel>
                         <FormControl>
-                          <Input placeholder="Ex. : 9305374" className="h-11 rounded-lg" {...field} />
+                          <Input placeholder={t("imoPlaceholder")} className="h-11 rounded-lg" {...field} />
                         </FormControl>
+                        <p className="text-xs text-muted-foreground">{t("imoHint")}</p>
                         <FormMessage>
                           {form.formState.errors.imo && tv("imoRequired")}
                         </FormMessage>

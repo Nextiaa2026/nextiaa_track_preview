@@ -6,6 +6,7 @@ import { vessels } from "@/db/schema";
 import { z } from "zod";
 
 const vesselInputSchema = z.object({
+  carrierName: z.string().min(1),
   name: z.string().min(2),
   imo: z.string().min(3),
   type: z.string().min(2),
@@ -37,6 +38,7 @@ export async function GET(request: NextRequest) {
     if (search) {
       conditions.push(
         or(
+          ilike(vessels.carrierName, `%${search}%`),
           ilike(vessels.name, `%${search}%`),
           ilike(vessels.imo, `%${search}%`),
           ilike(vessels.type, `%${search}%`),

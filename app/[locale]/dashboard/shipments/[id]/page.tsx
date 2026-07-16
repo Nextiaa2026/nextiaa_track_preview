@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useShipment, useDeleteShipment, useCreateReceipt } from "@/hooks/useShipments";
+import { useShipment, useDeleteShipment, useCreateReceipt, usePayments, usePrintShipmentInvoice } from "@/hooks/useShipments";
 import { AddTripLogSheet } from "@/components/sheets/AddTripLogSheet";
 import { CreateShipmentSheet } from "@/components/sheets/CreateShipmentSheet";
+import { RecordPaymentSheet } from "@/components/sheets/RecordPaymentSheet";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
@@ -28,11 +29,13 @@ import {
   CargoShipIcon,
   UserIcon,
   Location01Icon,
+  EuroCircleIcon,
 } from "@hugeicons/core-free-icons";
 import type { ShipmentReceipt } from "@/services/shipment.service";
 import { formatCurrency } from "@/lib/utils/currency";
 import { useSettings } from "@/providers/SettingsProvider";
 import { useLocale } from "next-intl";
+import { openPrintHtml } from "@/lib/print-shipment-documents";
 
 type OverviewStatRow = {
   label: string;
@@ -217,10 +220,13 @@ export default function ShipmentDetailPage() {
   const { data: shipment, isLoading, error } = useShipment(shipmentId);
   const { mutate: deleteShipment, isPending: isDeleting } = useDeleteShipment();
   const { mutateAsync: createReceipt, isPending: isCreatingReceipt } = useCreateReceipt();
+  const { mutateAsync: printShipmentInvoice, isPending: isPrintingInvoice } = usePrintShipmentInvoice();
+  const { data: paymentsData } = usePayments(shipmentId);
   const locale = useLocale();
   const { settings } = useSettings();
   const [logSheetOpen, setLogSheetOpen] = useState(false);
   const [editWizardOpen, setEditWizardOpen] = useState(false);
+  const [paymentSheetOpen, setPaymentSheetOpen] = useState(false);
   const [receiptPreviewOpen, setReceiptPreviewOpen] = useState(false);
   const [receiptPreview, setReceiptPreview] = useState<ShipmentReceipt | null>(null);
 
@@ -248,10 +254,22 @@ export default function ShipmentDetailPage() {
         color: "text-indigo-600",
       },
       {
-        label: "Vessel / Carrier",
+        label: "Transporteur",
+        value: vessel?.carrierName || "—",
+        icon: CargoShipIcon,
+        color: "text-indigo-600",
+      },
+      {
+        label: "Nom du bateau",
         value: vessel?.name || "—",
         icon: CargoShipIcon,
         color: "text-indigo-600",
+      },
+      {
+        label: "N° bateau (IMO)",
+        value: vessel?.imo || "N/A",
+        icon: CargoShipIcon,
+        color: "text-slate-600",
       },
       {
         label: "Chassis Number",
@@ -272,10 +290,12 @@ export default function ShipmentDetailPage() {
         color: "text-emerald-600",
       },
       {
-        label: "Vessel IMO",
-        value: vessel?.imo || "N/A",
-        icon: CargoShipIcon,
-        color: "text-slate-600",
+        label: "Paid / Remaining",
+        value: paymentsData
+          ? `${paymentsData.totalPaid} / ${paymentsData.remaining} €`
+          : "—",
+        icon: EuroCircleIcon,
+        color: "text-emerald-700",
       },
       {
         label: "Dimensions",
@@ -290,73 +310,18 @@ export default function ShipmentDetailPage() {
         color: "text-violet-600",
       },
     ];
-  }, [shipment]);
+  }, [shipment, paymentsData, settings.currency, locale]);
 
-  const printReceipt = (receipt: ShipmentReceipt) => {
-    const html = `
-      <!doctype html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>${receipt.receiptNumber}</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 32px; color: #111827; }
-            .receipt { border: 1px solid #d1d5db; border-radius: 10px; overflow: hidden; }
-            .header { padding: 20px; border-bottom: 1px solid #e5e7eb; background: #f9fafb; }
-            .title { font-size: 22px; font-weight: 700; margin: 0 0 6px; }
-            .meta { margin: 2px 0; font-size: 13px; color: #4b5563; }
-            .section { padding: 16px 20px; border-bottom: 1px solid #f3f4f6; }
-            .section:last-child { border-bottom: 0; }
-            .section h3 { margin: 0 0 10px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #6b7280; }
-            .row { display: flex; margin: 6px 0; font-size: 14px; }
-            .label { width: 170px; color: #6b7280; }
-            .value { font-weight: 600; }
-            @media print { body { margin: 0; } }
-          </style>
-        </head>
-        <body>
-          <div class="receipt">
-            <div class="header">
-              <h1 class="title">Shipment Receipt</h1>
-              <p class="meta">Receipt #: ${receipt.receiptNumber}</p>
-              <p class="meta">Issued: ${new Date(receipt.issuedAt).toLocaleString()}</p>
-            </div>
-            <div class="section">
-              <h3>Shipment</h3>
-              <div class="row"><div class="label">Tracking Number</div><div class="value">${receipt.shipment.trackingNumber}</div></div>
-              <div class="row"><div class="label">Item</div><div class="value">${receipt.shipment.itemName}</div></div>
-              <div class="row"><div class="label">Status</div><div class="value">${receipt.shipment.status}</div></div>
-              <div class="row"><div class="label">Shipping Cost</div><div class="value">${formatCurrency(Number(receipt.shipment.shippingCost || 0), settings.currency || "EUR", locale)}</div></div>
-            </div>
-            <div class="section">
-              <h3>Sender</h3>
-              <div class="row"><div class="label">Name</div><div class="value">${receipt.sender.name}</div></div>
-              <div class="row"><div class="label">Email</div><div class="value">${receipt.sender.email}</div></div>
-              <div class="row"><div class="label">Phone</div><div class="value">${receipt.sender.phone}</div></div>
-              <div class="row"><div class="label">Address</div><div class="value">${receipt.sender.address}, ${receipt.sender.city}, ${receipt.sender.country}</div></div>
-            </div>
-            <div class="section">
-              <h3>Receiver</h3>
-              <div class="row"><div class="label">Name</div><div class="value">${receipt.receiver.name}</div></div>
-              <div class="row"><div class="label">Email</div><div class="value">${receipt.receiver.email}</div></div>
-              <div class="row"><div class="label">Phone</div><div class="value">${receipt.receiver.phone}</div></div>
-              <div class="row"><div class="label">Address</div><div class="value">${receipt.receiver.address}, ${receipt.receiver.city}, ${receipt.receiver.country}</div></div>
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
-
-    const printWindow = window.open("", "_blank", "width=900,height=700");
-    if (!printWindow) {
-      toast.error("Unable to open print window");
-      return;
+  const printReceipt = async () => {
+    try {
+      const { html } = await printShipmentInvoice(shipmentId);
+      if (!openPrintHtml(html)) {
+        toast.error("Unable to open print window");
+        return;
+      }
+    } catch {
+      toast.error("Failed to print document");
     }
-    printWindow.document.open();
-    printWindow.document.write(html);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
   };
 
   const onCreateReceipt = async () => {
@@ -367,6 +332,19 @@ export default function ShipmentDetailPage() {
       toast.success("Receipt preview ready");
     } catch {
       toast.error("Failed to create receipt");
+    }
+  };
+
+  const onPrintInvoice = async () => {
+    try {
+      const { html } = await printShipmentInvoice(shipmentId);
+      if (!openPrintHtml(html)) {
+        toast.error("Unable to open print window");
+        return;
+      }
+      toast.success("Facture ouverte pour impression");
+    } catch {
+      toast.error("Impossible de générer la facture");
     }
   };
 
@@ -461,6 +439,23 @@ export default function ShipmentDetailPage() {
             {isCreatingReceipt ? "Creating receipt..." : "Create receipt"}
           </Button>
           <Button
+            variant="outline"
+            size="sm"
+            className="h-10 border-border bg-background px-4 hover:bg-muted"
+            disabled={isPrintingInvoice}
+            onClick={() => void onPrintInvoice()}
+          >
+            {isPrintingInvoice ? "Facture…" : "Facture"}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-10 border-border bg-background px-4 hover:bg-muted"
+            onClick={() => setPaymentSheetOpen(true)}
+          >
+            Paiement
+          </Button>
+          <Button
             variant="destructive"
             size="sm"
             className="h-10 px-4"
@@ -485,6 +480,59 @@ export default function ShipmentDetailPage() {
         key={shipmentId}
         overviewStats={overviewStats}
       />
+
+      {/* Payments */}
+      <Card className="border-border bg-card overflow-hidden">
+        <div className="flex items-center justify-between border-b border-border bg-muted/20 px-6 py-4">
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              Paiements
+            </h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Total payé {paymentsData?.totalPaid ?? 0} € — reste {paymentsData?.remaining ?? "—"} €
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-2 text-[10px] font-bold uppercase tracking-wider"
+            onClick={() => setPaymentSheetOpen(true)}
+          >
+            <Plus size={14} />
+            Ajouter
+          </Button>
+        </div>
+        <div className="overflow-x-auto">
+          {!paymentsData?.data?.length ? (
+            <p className="px-6 py-8 text-sm text-muted-foreground text-center">
+              Aucun paiement enregistré. Ajoutez un acompte ou un solde pour mettre à jour la facture.
+            </p>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/5 text-left text-muted-foreground">
+                  <th className="px-6 py-3 font-normal">Date</th>
+                  <th className="px-6 py-3 font-normal">Raison</th>
+                  <th className="px-6 py-3 font-normal">Montant</th>
+                  <th className="px-6 py-3 font-normal">Notes</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {paymentsData.data.map((p) => (
+                  <tr key={p.id}>
+                    <td className="px-6 py-3">
+                      {new Date(p.paidAt).toLocaleDateString("fr-FR")}
+                    </td>
+                    <td className="px-6 py-3 capitalize">{p.reason}</td>
+                    <td className="px-6 py-3 font-medium">{p.amount} €</td>
+                    <td className="px-6 py-3 text-muted-foreground">{p.notes || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </Card>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         {/* Main Content Column */}
@@ -700,6 +748,13 @@ export default function ShipmentDetailPage() {
         shipmentId={shipmentId}
       />
 
+      <RecordPaymentSheet
+        open={paymentSheetOpen}
+        onOpenChange={setPaymentSheetOpen}
+        shipmentId={shipmentId}
+        remaining={paymentsData?.remaining}
+      />
+
       <Sheet open={receiptPreviewOpen} onOpenChange={setReceiptPreviewOpen}>
         <SheetContent side="right" className="w-full lg:max-w-2xl">
           <SheetHeader>
@@ -750,11 +805,9 @@ export default function ShipmentDetailPage() {
 
           <SheetFooter className="mt-auto">
             <Button
-              disabled={!receiptPreview}
+              disabled={!receiptPreview || isPrintingInvoice}
               onClick={() => {
-                if (!receiptPreview) return;
-                printReceipt(receiptPreview);
-                toast.success("Print dialog opened");
+                void printReceipt().then(() => toast.success("Print dialog opened"));
               }}
             >
               Print receipt

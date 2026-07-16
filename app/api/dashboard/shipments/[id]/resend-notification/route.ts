@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
-import { shipments, customers } from "@/db/schema";
+import { invoices, shipments } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { emailService } from "@/services/email.service";
-import { buildReceiptHtml } from "@/lib/print-shipment-documents";
-import { buildInvoiceHtml } from "@/lib/invoice";
 import { getStatusDisplay } from "@/lib/utils/shipment";
+import {
+  createDownloadToken,
+  getAppBaseUrl,
+  invoiceDownloadUrl,
+  receiptDownloadUrl,
+} from "@/lib/document-tokens";
+import { signReceiptDownloadToken } from "@/lib/documents/receipt-token";
 
 export async function POST(
   request: NextRequest,
@@ -25,6 +30,7 @@ export async function POST(
       with: {
         sender: true,
         receiver: true,
+        invoices: true,
       },
     });
 
@@ -32,27 +38,31 @@ export async function POST(
       return NextResponse.json({ error: "Shipment not found" }, { status: 404 });
     }
 
-    const receipt = {
-      receiptNumber: `RCPT-${shipment.id}`,
-      issuedAt: new Date().toISOString(),
-      shipment: {
-        id: shipment.id,
-        trackingNumber: shipment.trackingNumber,
-        chassisNumber: shipment.chassisNumber,
-        itemName: shipment.itemName,
-        itemWeight: shipment.itemWeight || "N/A",
-        status: shipment.status,
-        createdAt: shipment.createdAt.toISOString(),
-        shippingCost: shipment.shippingCost,
-      },
-      sender: shipment.sender,
-      receiver: shipment.receiver,
-    };
+    let invoice = [...shipment.invoices].sort(
+      (a, b) => new Date(b.issuedAt).getTime() - new Date(a.issuedAt).getTime(),
+    )[0];
 
-    const receiptHtml = buildReceiptHtml(receipt);
-    const invoiceHtml = buildInvoiceHtml(receipt);
+    if (!invoice) {
+      return NextResponse.json(
+        { error: "No invoice found for this shipment" },
+        { status: 404 },
+      );
+    }
+
+    if (!invoice.downloadToken) {
+      const token = createDownloadToken();
+      const [updated] = await db
+        .update(invoices)
+        .set({ downloadToken: token, updatedAt: new Date() })
+        .where(eq(invoices.id, invoice.id))
+        .returning();
+      invoice = updated;
+    }
+
+    const baseUrl = getAppBaseUrl(request.url);
+    const receiptToken = await signReceiptDownloadToken(shipment.id);
     const statusSummary = `Rappel : L'expédition ${shipment.trackingNumber} est actuellement ${getStatusDisplay(shipment.status)}.`;
-    
+
     const recipients = [
       { name: shipment.sender.name, email: shipment.sender.email },
       { name: shipment.receiver.name, email: shipment.receiver.email },
@@ -60,7 +70,7 @@ export async function POST(
 
     await Promise.all(
       recipients.map((recipient) =>
-        emailService.sendShipmentPacketEmail({
+        emailService.sendShipmentDocumentLinksEmail({
           recipient,
           trackingNumber: shipment.trackingNumber,
           itemName: shipment.itemName,
@@ -71,8 +81,8 @@ export async function POST(
             : undefined,
           status: shipment.status,
           statusSummary,
-          receiptHtml,
-          invoiceHtml,
+          invoiceDownloadUrl: invoiceDownloadUrl(invoice.downloadToken, baseUrl),
+          receiptDownloadUrl: receiptDownloadUrl(shipment.id, receiptToken, baseUrl),
         }),
       ),
     );

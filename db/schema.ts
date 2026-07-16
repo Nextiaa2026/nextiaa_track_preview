@@ -57,7 +57,11 @@ export const customers = pgTable("customers", {
 
 export const vessels = pgTable("vessels", {
   id: uuid("id").primaryKey().defaultRandom(),
+  /** Shipping line / carrier company (e.g. Sallaum Lines) */
+  carrierName: varchar("carrier_name", { length: 255 }).notNull().default(""),
+  /** Vessel / boat name (e.g. Silver Glory) */
   name: varchar("name", { length: 255 }).notNull(),
+  /** IMO = International Maritime Organization number (boat number) */
   imo: varchar("imo", { length: 100 }).notNull().unique(),
   type: varchar("type", { length: 100 }).notNull().default("cargo"),
   lastKnownLat: doublePrecision("last_known_lat"),
@@ -146,6 +150,29 @@ export const invoices = pgTable("invoices", {
   dueDate: timestamp("due_date"),
   paidAt: timestamp("paid_at"),
   notes: text("notes"),
+  /** Opaque token for public download link (email → click → document) */
+  downloadToken: varchar("download_token", { length: 64 }).notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// ─── Payments ─────────────────────────────────────────────────────────────────
+// Multiple payments can be recorded against one shipment (acompte, solde, etc.).
+
+export const payments = pgTable("payments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  shipmentId: uuid("shipment_id")
+    .notNull()
+    .references(() => shipments.id, { onDelete: "cascade" }),
+  invoiceId: uuid("invoice_id").references(() => invoices.id, { onDelete: "set null" }),
+  /** Amount in whole currency units (same convention as shipping_cost) */
+  amount: varchar("amount", { length: 100 }).notNull(),
+  /** e.g. acompte, solde, assurance, autre */
+  reason: varchar("reason", { length: 255 }).notNull().default("acompte"),
+  paidAt: timestamp("paid_at").defaultNow().notNull(),
+  notes: text("notes"),
+  /** Opaque token for public payment receipt download */
+  downloadToken: varchar("download_token", { length: 64 }).notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -189,9 +216,10 @@ export const shipmentsRelations = relations(shipments, ({ one, many }) => ({
   }),
   trip: one(trips, { fields: [shipments.tripId], references: [trips.id] }),
   invoices: many(invoices),
+  payments: many(payments),
 }));
 
-export const invoicesRelations = relations(invoices, ({ one }) => ({
+export const invoicesRelations = relations(invoices, ({ one, many }) => ({
   shipment: one(shipments, { fields: [invoices.shipmentId], references: [shipments.id] }),
   sender: one(customers, {
     fields: [invoices.senderId],
@@ -202,5 +230,17 @@ export const invoicesRelations = relations(invoices, ({ one }) => ({
     fields: [invoices.receiverId],
     references: [customers.id],
     relationName: "invoiceReceiver",
+  }),
+  payments: many(payments),
+}));
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  shipment: one(shipments, {
+    fields: [payments.shipmentId],
+    references: [shipments.id],
+  }),
+  invoice: one(invoices, {
+    fields: [payments.invoiceId],
+    references: [invoices.id],
   }),
 }));

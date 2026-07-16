@@ -176,12 +176,16 @@ export default function TripDetailPage() {
             {trip.vessel ? (
               <div className="space-y-3">
                 <div>
-                  <p className="text-[10px] text-muted-foreground uppercase font-medium">Name</p>
+                  <p className="text-[10px] text-muted-foreground uppercase font-medium">Transporteur</p>
+                  <p className="text-sm font-semibold text-foreground mt-0.5">{trip.vessel.carrierName || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase font-medium">Nom du bateau</p>
                   <p className="text-sm font-semibold text-foreground mt-0.5">{trip.vessel.name}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-[10px] text-muted-foreground uppercase font-medium">IMO</p>
+                    <p className="text-[10px] text-muted-foreground uppercase font-medium">N° bateau (IMO)</p>
                     <p className="text-xs font-mono font-semibold text-foreground mt-0.5">{trip.vessel.imo}</p>
                   </div>
                   <div>

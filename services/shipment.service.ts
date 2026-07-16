@@ -13,7 +13,13 @@ export interface Trip {
   id: string;
   name: string;
   vesselId?: string | null;
-  vessel?: { id: string; name: string; imo: string; type: string } | null;
+  vessel?: {
+      id: string;
+      carrierName?: string;
+      name: string;
+      imo: string;
+      type: string;
+    } | null;
   origin?: string | null;
   destination?: string | null;
   departureDate?: string | null;
@@ -57,7 +63,13 @@ export interface Shipment {
   trip?: {
     id: string;
     name: string;
-    vessel?: { id: string; name: string; imo: string; type: string } | null;
+    vessel?: {
+      id: string;
+      carrierName?: string;
+      name: string;
+      imo: string;
+      type: string;
+    } | null;
   } | null;
   sender: { id: string; name: string; email: string; city: string };
   receiver: { id: string; name: string; email: string; city: string };
@@ -75,7 +87,13 @@ export interface ShipmentDetail extends Shipment {
   trip?: {
     id: string;
     name: string;
-    vessel?: { id: string; name: string; imo: string; type: string } | null;
+    vessel?: {
+      id: string;
+      carrierName?: string;
+      name: string;
+      imo: string;
+      type: string;
+    } | null;
     logs?: Array<{
       id: string;
       tripId: string;
@@ -153,6 +171,7 @@ export interface DashboardStats {
 
 export interface Vessel {
   id: string;
+  carrierName: string;
   name: string;
   imo: string;
   type: string;
@@ -165,8 +184,29 @@ export interface Vessel {
 
 export interface VesselUpdateInput
   extends Partial<
-    Pick<Vessel, "name" | "imo" | "type" | "lastKnownLat" | "lastKnownLon" | "isActive">
+    Pick<Vessel, "carrierName" | "name" | "imo" | "type" | "lastKnownLat" | "lastKnownLon" | "isActive">
   > {}
+
+export interface Payment {
+  id: string;
+  shipmentId: string;
+  invoiceId?: string | null;
+  amount: string;
+  reason: string;
+  paidAt: string;
+  notes?: string | null;
+  downloadToken: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PaymentInput {
+  amount: string | number;
+  reason: string;
+  paidAt?: string;
+  notes?: string;
+  notifyParties?: boolean;
+}
 
 export interface ActiveShipmentMarker {
   shipmentId: string;
@@ -368,7 +408,7 @@ export const shipmentService = {
   },
 
   createVessel: async (
-    data: Pick<Vessel, "name" | "imo" | "type"> & {
+    data: Pick<Vessel, "carrierName" | "name" | "imo" | "type"> & {
       lastKnownLat?: number;
       lastKnownLon?: number;
       isActive?: boolean;
@@ -391,6 +431,25 @@ export const shipmentService = {
     await apiClient.post("/api/dashboard/system/cleanup");
   },
 
+  // ── Payments ───────────────────────────────────────────────────────────────
+
+  getPayments: async (
+    shipmentId: string,
+  ): Promise<{
+    data: Payment[];
+    totalPaid: number;
+    shippingCost: number;
+    remaining: number;
+  }> => {
+    const response = await apiClient.get(`/api/dashboard/shipments/${shipmentId}/payments`);
+    return response.data;
+  },
+
+  createPayment: async (shipmentId: string, data: PaymentInput): Promise<Payment> => {
+    const response = await apiClient.post(`/api/dashboard/shipments/${shipmentId}/payments`, data);
+    return response.data.payment;
+  },
+
   // ── Invoices ───────────────────────────────────────────────────────────────
 
   getInvoices: async (
@@ -404,6 +463,16 @@ export const shipmentService = {
     const response = await apiClient.get("/api/dashboard/invoices", {
       params: { page, pageSize, search, status, startDate, endDate },
     });
+    return response.data;
+  },
+
+  printInvoice: async (invoiceId: string): Promise<{ html: string }> => {
+    const response = await apiClient.get(`/api/dashboard/invoices/${invoiceId}/print`);
+    return response.data;
+  },
+
+  printShipmentInvoice: async (shipmentId: string): Promise<{ html: string }> => {
+    const response = await apiClient.get(`/api/dashboard/shipments/${shipmentId}/invoice`);
     return response.data;
   },
 };
