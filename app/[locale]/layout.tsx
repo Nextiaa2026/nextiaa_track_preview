@@ -1,26 +1,22 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Poppins } from "next/font/google";
+import { Figtree, Geist_Mono } from "next/font/google";
 import "../globals.css";
 import { cn } from "@/lib/utils";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { SettingsProvider } from "@/providers/SettingsProvider";
 import { Toaster } from "sonner";
-import { NextIntlClientProvider, hasLocale } from 'next-intl';
-import { getMessages, setRequestLocale } from 'next-intl/server';
-import { notFound } from 'next/navigation';
-import { routing } from '@/i18n/routing';
+import { NextIntlClientProvider, hasLocale } from "next-intl";
+import { getMessages, setRequestLocale } from "next-intl/server";
+import { notFound } from "next/navigation";
+import { routing } from "@/i18n/routing";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-const poppins = Poppins({
+const figtree = Figtree({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-poppins",
-});
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-figtree",
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -29,7 +25,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nexiaa Track",
+  title: "2NP",
   description: "Shipment tracking and management system",
   icons: {
     icon: "/favicon.png",
@@ -49,12 +45,10 @@ export default async function RootLayout({
 }) {
   const { locale } = await params;
 
-  // Validate the locale — triggers notFound() for unknown locales
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
 
-  // Enable static rendering
   setRequestLocale(locale);
 
   const messages = await getMessages();
@@ -63,15 +57,12 @@ export default async function RootLayout({
     <html
       lang={locale}
       className={cn(
-        "h-full",
-        "antialiased",
-        geistSans.variable,
+        "h-full antialiased font-sans",
+        figtree.variable,
         geistMono.variable,
-        "font-sans",
-        poppins.variable,
       )}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col font-sans">
         <NextIntlClientProvider messages={messages} locale={locale}>
           <AuthProvider>
             <QueryProvider>

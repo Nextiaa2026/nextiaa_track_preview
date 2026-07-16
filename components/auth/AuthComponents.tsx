@@ -12,8 +12,8 @@ import { Languages } from "lucide-react";
 import { Logo } from "@/components/logo";
 
 export const AuthLogo = () => (
-  <div className="flex justify-center mb-8 scale-110">
-    <Logo showText={true} />
+  <div className="flex justify-center mb-6">
+    <Logo showText={true} className="pointer-events-none" />
   </div>
 );
 
@@ -50,11 +50,12 @@ export function AuthCard({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gray-50/80 p-4 animate-in fade-in duration-500 relative">
       <LanguageSwitcher />
       <div className="w-full max-w-md">
+        <AuthLogo />
         <div className="bg-white rounded-[24px] border border-gray-200 p-10 shadow-xl shadow-black/5">
           {children}
         </div>
         <p className="text-center text-[10px] text-gray-400 tracking-wide mt-6">
-          &copy; 2026 Nexiaa Track · Tous droits réservés
+          &copy; 2026 2NP · Tous droits réservés
         </p>
       </div>
     </div>

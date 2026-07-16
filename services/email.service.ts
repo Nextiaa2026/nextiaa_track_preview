@@ -140,7 +140,7 @@ function renderEmailLayout(params: {
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px; background:#ffffff; border-radius:14px; overflow:hidden; border:1px solid #e2e8f0;">
             <tr>
               <td style="padding:18px 22px; background:linear-gradient(90deg,#1d4ed8,#2563eb); color:#ffffff;">
-                <div style="font-size:12px; letter-spacing:0.08em; text-transform:uppercase; opacity:0.9;">Nexiaa Track</div>
+                <div style="font-size:12px; letter-spacing:0.18em; text-transform:uppercase; opacity:0.9; font-weight:700;">2NP</div>
                 <div style="margin-top:6px; font-size:20px; font-weight:700;">${escapeHtml(params.title)}</div>
               </td>
             </tr>
@@ -159,7 +159,7 @@ function renderEmailLayout(params: {
             </tr>
             <tr>
               <td style="padding:16px 22px; background:#f8fafc; border-top:1px solid #e2e8f0; color:#64748b; font-size:12px; line-height:1.5;">
-                Cet e-mail a été envoyé automatiquement par Nexiaa Track.
+                Cet e-mail a été envoyé automatiquement par 2NP.
               </td>
             </tr>
           </table>
@@ -305,7 +305,7 @@ export const emailService = {
       });
 
       const { error } = await resend.emails.send({
-        from: "Nexiaa Track <contact@ginfos.site>",
+        from: "2NP <contact@ginfos.site>",
         to: data.recipient.email,
         subject: `Facture — paiement ${data.reason} pour ${data.trackingNumber}`,
         html,
@@ -352,7 +352,7 @@ export const emailService = {
       });
 
       const { error } = await resend.emails.send({
-        from: "Nexiaa Track <contact@ginfos.site>",
+        from: "2NP <contact@ginfos.site>",
         to: data.recipient.email,
         subject: `Expédition ${data.trackingNumber} : facture et reçu`,
         html,
@@ -374,7 +374,7 @@ export const emailService = {
     try {
       const html = generateShipmentCreatedTemplate(data);
       await resend.emails.send({
-        from: "Nexiaa Track <contact@ginfos.site>",
+        from: "2NP <contact@ginfos.site>",
         to: data.recipient.email,
         subject: `Votre expédition ${data.trackingNumber} a été créée`,
         html: html,
@@ -413,7 +413,7 @@ export const emailService = {
       });
       
    const {data:emailResponse, error} =   await resend.emails.send({
-        from: "Nexiaa Track <contact@ginfos.site>",
+        from: "2NP <contact@ginfos.site>",
         to: data.recipient.email,
         subject: `Expédition ${data.trackingNumber} : reçu, facture et statut`,
         html: html,
@@ -438,7 +438,7 @@ export const emailService = {
     try {
       const html = generateStatusUpdateTemplate(data);
       await resend.emails.send({
-        from: "Nexiaa Track <contact@ginfos.site>",
+        from: "2NP <contact@ginfos.site>",
         to: data.recipient.email,
         subject: `Mise à jour du statut de l'expédition ${data.trackingNumber}`,
         html: html,
@@ -459,7 +459,7 @@ export const emailService = {
     try {
       const html = generateDeliveryConfirmationTemplate(data);
       await resend.emails.send({
-        from: "Nexiaa Track <contact@ginfos.site>",
+        from: "2NP <contact@ginfos.site>",
         to: data.recipient.email,
         subject: `Livraison confirmée pour ${data.trackingNumber}`,
         html: html,
@@ -480,7 +480,7 @@ export const emailService = {
     try {
       const html = generateFailedDeliveryTemplate(data);
       await resend.emails.send({
-        from: "Nexiaa Track <contact@ginfos.site>",
+        from: "2NP <contact@ginfos.site>",
         to: data.recipient.email,
         subject: `Échec de la livraison pour ${data.trackingNumber}`,
         html: html,
@@ -501,7 +501,7 @@ export const emailService = {
     try {
       const html = generateVesselStatusUpdateTemplate(data);
       await resend.emails.send({
-        from: "Nexiaa Track <contact@ginfos.site>",
+        from: "2NP <contact@ginfos.site>",
         to: data.recipient.email,
         subject: `Mise à jour du transport ${data.vesselName} pour ${data.trackingNumber}`,
         html: html,

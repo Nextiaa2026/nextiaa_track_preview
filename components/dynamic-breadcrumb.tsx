@@ -33,11 +33,11 @@ export function DynamicBreadcrumb() {
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem className="hidden md:block">
-          <BreadcrumbLink href="/dashboard" className="font-medium">Nexiaa</BreadcrumbLink>
+          <BreadcrumbLink href="/dashboard" className="font-medium">2NP</BreadcrumbLink>
         </BreadcrumbItem>
         
         {segments.map((segment, index) => {
-          // Skip the "dashboard" segment in the breadcrumb display as we have "Nexiaa" or "Dashboard" as root
+          // Skip the "dashboard" segment in the breadcrumb display as we have "2NP" as root
           if (segment === "dashboard") return null;
           
           const href = `/${segments.slice(0, index + 1).join("/")}`;

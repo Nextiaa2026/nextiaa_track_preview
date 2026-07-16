@@ -66,7 +66,7 @@ export function buildReceiptHtml(receipt: ShipmentReceipt): string {
                 <p>Date d'émission : ${escapeHtml(date)}</p>
               </div>
               <div class="header-right">
-                <div class="logo">Nexiaa Track</div>
+                <div class="logo">2NP</div>
                 <p style="font-size: 12px; color: #6b7280;">Services de fret consolidé</p>
               </div>
             </div>
@@ -113,7 +113,7 @@ export function buildReceiptHtml(receipt: ShipmentReceipt): string {
             </div>
 
             <div class="footer">
-              Merci d'avoir choisi Nexiaa Track pour vos besoins d'expédition.
+              Merci d'avoir choisi 2NP pour vos besoins d'expédition.
               <br/>Ceci est un document officiel généré par notre système de suivi.
             </div>
           </div>
@@ -170,7 +170,7 @@ export function buildWaybillHtml(receipt: ShipmentReceipt): string {
       <body>
         <div class="label-container">
           <div class="label-header">
-            <div class="label-logo">Nexiaa Track</div>
+            <div class="label-logo">2NP</div>
             <div class="service-name">CONSOLIDATED SEA FREIGHT SERVICE</div>
           </div>
 

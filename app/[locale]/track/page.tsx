@@ -12,6 +12,7 @@ import { Loader2, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { WordLogo } from "@/components/logo";
 
 const TrackingMap = dynamic(
   () => import("@/components/tracking-map").then((mod) => mod.TrackingMap),
@@ -63,10 +64,10 @@ export default function TrackingPage() {
       </div>
       <div className="relative z-10 mx-auto w-full max-w-2xl px-4 pt-8">
         <div className="mb-4 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
-            {t("brandTitle")}
-          </h1>
-          <p className="mt-1 text-sm text-gray-600">
+          <div className="flex justify-center">
+            <WordLogo className="text-[40px]" />
+          </div>
+          <p className="mt-2 text-sm text-gray-600">
             {t("publicSubtitle")}
           </p>
         </div>

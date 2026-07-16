@@ -52,11 +52,11 @@ export function buildAutoTransitInvoiceHtml(data: ShipmentDocumentData): string 
   <title>Facture - ${escapeHtml(data.invoiceNumber)}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; }
     body {
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: "Figtree", Arial, Helvetica, sans-serif;
       margin: 0;
       padding: 24px;
       color: #111;
@@ -65,22 +65,37 @@ export function buildAutoTransitInvoiceHtml(data: ShipmentDocumentData): string 
     }
     .doc { max-width: 820px; margin: 0 auto; }
     .brand { text-align: center; margin-bottom: 18px; }
+    .brand .logo-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      margin: 0 auto 10px;
+      border-radius: 10px;
+      background: #1e3a8a;
+      color: #fff;
+      font-family: "Syne", Arial, Helvetica, sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
     .brand .logo {
       margin: 0;
-      font-family: "Bebas Neue", "Arial Narrow", Impact, sans-serif;
-      font-size: 56px;
-      font-weight: 400;
-      letter-spacing: 0.22em;
+      font-family: "Syne", Arial, Helvetica, sans-serif;
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       line-height: 1;
       color: #0a0a0a;
     }
     .brand h1 {
       margin: 10px 0 0;
-      font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif;
-      font-size: 18px;
+      font-family: "Figtree", Arial, Helvetica, sans-serif;
+      font-size: 14px;
       font-weight: 700;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
     }
     .brand .tagline { margin: 6px 0 0; font-size: 12px; }
@@ -166,6 +181,7 @@ export function buildAutoTransitInvoiceHtml(data: ShipmentDocumentData): string 
 <body>
   <div class="doc">
     <div class="brand">
+      <div class="logo-mark">2N</div>
       <div class="logo">2NP</div>
       ${data.companyName && data.companyName.trim().toUpperCase() !== "2NP"
         ? `<h1>${escapeHtml(data.companyName)}</h1>`

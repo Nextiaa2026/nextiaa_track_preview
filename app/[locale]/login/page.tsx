@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
-import { AuthCard, AuthLogo } from "@/components/auth/AuthComponents";
+import { AuthCard } from "@/components/auth/AuthComponents";
 import { useTranslations } from "next-intl";
 
 export default function AuthLoginPage() {
@@ -61,7 +61,6 @@ export default function AuthLoginPage() {
 
   return (
     <AuthCard>
-      <AuthLogo />
       <div className="text-center mb-6">
         <h1 className="text-lg font-semibold text-gray-900">{t("loginTitle")}</h1>
         <p className="text-sm text-gray-500 mt-0.5">{t("loginSubtitle")}</p>
