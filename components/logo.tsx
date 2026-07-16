@@ -62,7 +62,7 @@ export function WordLogo({ className }: { className?: string }) {
       <span
         className={cn(
           logoFont.className,
-          "flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary text-[16px] font-extrabold tracking-tight text-primary-foreground shadow-sm",
+          "flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary text-[16px] font-extrabold tracking-tight text-primary-foreground shadow-sm",
         )}
       >
         2N

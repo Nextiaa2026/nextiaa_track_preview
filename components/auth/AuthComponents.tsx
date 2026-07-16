@@ -36,9 +36,9 @@ export function LanguageSwitcher({ className }: { className?: string }) {
           <Languages className="size-3.5 mr-2 text-gray-500" />
           <SelectValue placeholder="Language" />
         </SelectTrigger>
-        <SelectContent className="rounded-2xl">
-          <SelectItem value="en" className="rounded-xl">English</SelectItem>
-          <SelectItem value="fr" className="rounded-xl">Français</SelectItem>
+        <SelectContent className="rounded-lg">
+          <SelectItem value="en" className="rounded-lg">English</SelectItem>
+          <SelectItem value="fr" className="rounded-lg">Français</SelectItem>
         </SelectContent>
       </Select>
     </div>
@@ -51,7 +51,7 @@ export function AuthCard({ children }: { children: React.ReactNode }) {
       <LanguageSwitcher />
       <div className="w-full max-w-md">
         <AuthLogo />
-        <div className="bg-white rounded-[24px] border border-gray-200 p-10 shadow-xl shadow-black/5">
+        <div className="bg-white rounded-lg border border-gray-200 p-10 shadow-xl shadow-black/5">
           {children}
         </div>
         <p className="text-center text-[10px] text-gray-400 tracking-wide mt-6">

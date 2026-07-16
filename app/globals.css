@@ -39,13 +39,13 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.5rem;
+  --radius-2xl: 0.5rem;
+  --radius-3xl: 0.5rem;
+  --radius-4xl: 0.5rem;
 }
 
 :root {
@@ -72,7 +72,7 @@
   --chart-3: oklch(0.55 0.2 300);
   --chart-4: oklch(0.65 0.2 150);
   --chart-5: oklch(0.7 0.18 50);
-  --radius: 0.5rem;
+  --radius: 0.5rem; /* maps to rounded-lg across the design system */
   --sidebar: oklch(0.98 0.01 264);
   --sidebar-foreground: oklch(0.2 0 0);
   --sidebar-primary: oklch(0.4 0.15 264);

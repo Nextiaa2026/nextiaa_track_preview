@@ -14,7 +14,7 @@ export async function sendOtpEmail(email: string, otp: string) {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Nexiaa Track <onboarding@resend.dev>",
+        from: "2NP <onboarding@resend.dev>",
         to: email,
         subject: "Your OTP Verification Code",
         html: `

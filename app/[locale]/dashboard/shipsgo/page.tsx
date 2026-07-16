@@ -86,7 +86,7 @@ export default function ShipsGoPage() {
               API Configuration
             </CardTitle>
             <CardDescription>
-              Configure your API credentials to allow Nexiaa to communicate with ShipsGo.
+              Configure your API credentials to allow 2NP to communicate with ShipsGo.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

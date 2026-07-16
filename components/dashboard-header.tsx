@@ -48,7 +48,7 @@ export function DashboardHeader() {
             <div className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-white bg-emerald-500" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56 mt-2 rounded-[20px] p-2" align="end" forceMount>
+        <DropdownMenuContent className="w-56 mt-2 rounded-lg p-2" align="end" forceMount>
           <DropdownMenuLabel className="font-normal p-2">
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-semibold leading-none">{displayName}</p>

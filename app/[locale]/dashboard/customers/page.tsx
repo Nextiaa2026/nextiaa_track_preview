@@ -216,7 +216,7 @@ export default function CustomersPage() {
 
   if (error) {
     return (
-      <div className="p-12 text-center bg-red-50 rounded-2xl border border-red-100 text-red-700">
+      <div className="p-12 text-center bg-red-50 rounded-lg border border-red-100 text-red-700">
         <h2 className="font-bold text-xl tracking-tight">
           {t("loadErrorTitle")}
         </h2>

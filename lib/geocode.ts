@@ -13,7 +13,7 @@ export async function geocodePlace(
   const res = await fetch(url.toString(), {
     headers: {
       Accept: "application/json",
-      "User-Agent": "NexiaaTrack/1.0 (public tracking map)",
+      "User-Agent": "2NP/1.0 (public tracking map)",
     },
   });
 

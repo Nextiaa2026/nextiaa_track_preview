@@ -74,7 +74,7 @@ export default function TripDetailPage() {
       </div>
 
       {/* Header Panel */}
-      <div className="rounded-3xl border border-border bg-gradient-to-br from-card to-muted/20 p-6 md:p-8 shadow-sm">
+      <div className="rounded-lg border border-border bg-gradient-to-br from-card to-muted/20 p-6 md:p-8 shadow-sm">
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div className="space-y-2">
             <div className="flex items-center gap-3">

@@ -7,7 +7,7 @@ function getSecret(): Uint8Array {
     process.env.AUTH_SECRET ||
     process.env.NEXTAUTH_SECRET ||
     process.env.DOCUMENT_TOKEN_SECRET ||
-    "nexiaa-document-fallback-secret";
+    "nexiaa-document-fallback-secret"; // keep stable for existing tokens; override via AUTH_SECRET in prod
   return new TextEncoder().encode(secret);
 }
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import axios from "axios";
 
-const USER_AGENT = "NexiaaTrack/1.0 (internal geocoder; https://github.com/)";
+const USER_AGENT = "2NP/1.0 (internal geocoder; https://github.com/)";
 
 export async function GET(request: NextRequest) {
   try {
