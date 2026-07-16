@@ -52,11 +52,11 @@ export function buildAutoTransitInvoiceHtml(data: ShipmentDocumentData): string 
   <title>Facture - ${escapeHtml(data.invoiceNumber)}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; }
     body {
-      font-family: "Figtree", Arial, Helvetica, sans-serif;
+      font-family: "Inter", Arial, Helvetica, sans-serif;
       margin: 0;
       padding: 24px;
       color: #111;
@@ -92,7 +92,7 @@ export function buildAutoTransitInvoiceHtml(data: ShipmentDocumentData): string 
     }
     .brand h1 {
       margin: 10px 0 0;
-      font-family: "Figtree", Arial, Helvetica, sans-serif;
+      font-family: "Inter", Arial, Helvetica, sans-serif;
       font-size: 14px;
       font-weight: 700;
       letter-spacing: 0.06em;

@@ -7,6 +7,7 @@ import { z } from "zod";
 import { ColumnDef } from "@tanstack/react-table";
 import { PageHeader } from "@/components/page-header";
 import { DataTable } from "@/components/data-table";
+import { TableDateCell } from "@/components/table-date-cell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -228,7 +229,7 @@ export default function TripsPage() {
               {row.original.name}
             </Link>
             {row.original.vessel && (
-              <span className="text-[10px] text-gray-400 truncate">
+              <span className="text-xs text-gray-400 truncate">
                 {row.original.vessel.carrierName
                   ? `${row.original.vessel.carrierName} — ${row.original.vessel.name}`
                   : row.original.vessel.name}{" "}
@@ -272,7 +273,7 @@ export default function TripsPage() {
         cell: (info) => {
           const status = info.getValue() as TripStatus;
           return (
-            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider border ${getStatusColor(status)}`}>
+            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium uppercase tracking-wider border ${getStatusColor(status)}`}>
               {ts(status)}
             </span>
           );
@@ -280,12 +281,13 @@ export default function TripsPage() {
       },
       {
         accessorKey: "createdAt",
-        header: t("colCreated"),
-        cell: ({ row }) => (
-          <span className="text-sm text-gray-500">
-            {format(new Date(row.original.createdAt), "dd/MM/yyyy")}
-          </span>
-        ),
+        header: t("colCreatedAt"),
+        cell: ({ row }) => <TableDateCell value={row.original.createdAt} />,
+      },
+      {
+        accessorKey: "updatedAt",
+        header: t("colUpdatedAt"),
+        cell: ({ row }) => <TableDateCell value={row.original.updatedAt} />,
       },
       {
         id: "actions",

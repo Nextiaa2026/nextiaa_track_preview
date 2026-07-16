@@ -74,6 +74,7 @@ export interface Shipment {
   sender: { id: string; name: string; email: string; city: string };
   receiver: { id: string; name: string; email: string; city: string };
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface ShipmentDetail extends Shipment {

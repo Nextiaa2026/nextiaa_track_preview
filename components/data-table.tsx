@@ -171,7 +171,7 @@ export function DataTable<TData>({
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
-                    className="font-normal text-gray-900 h-12 whitespace-nowrap"
+                    className="h-11 whitespace-nowrap text-sm font-bold capitalize text-foreground"
                   >
                     {header.isPlaceholder
                       ? null
@@ -203,7 +203,7 @@ export function DataTable<TData>({
                   className="border-gray-50 hover:bg-gray-50/60 transition-colors"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="py-4 text-gray-600">
+                    <TableCell key={cell.id} className="py-3.5 text-sm text-foreground/80">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),

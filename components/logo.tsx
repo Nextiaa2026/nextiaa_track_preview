@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Syne } from "next/font/google";
 import { cn } from "@/lib/utils";
 
-/** Distinct display face for the 2NP mark (app UI uses Figtree). */
+/** Distinct display face for the 2NP mark (app UI uses Inter). */
 const logoFont = Syne({
   weight: ["700", "800"],
   subsets: ["latin"],

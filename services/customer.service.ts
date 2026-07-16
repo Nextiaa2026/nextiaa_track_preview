@@ -15,6 +15,7 @@ export interface Customer {
   latitude: number | null;
   longitude: number | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface PaginatedResponse<T> {

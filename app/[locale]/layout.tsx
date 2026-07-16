@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Figtree, Geist_Mono } from "next/font/google";
+import { Inter, Geist_Mono } from "next/font/google";
 import "../globals.css";
 import { cn } from "@/lib/utils";
 import { QueryProvider } from "@/providers/QueryProvider";
@@ -12,10 +12,9 @@ import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-const figtree = Figtree({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
-  variable: "--font-figtree",
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -58,7 +57,7 @@ export default async function RootLayout({
       lang={locale}
       className={cn(
         "h-full antialiased font-sans",
-        figtree.variable,
+        inter.variable,
         geistMono.variable,
       )}
     >

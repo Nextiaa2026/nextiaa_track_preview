@@ -6,6 +6,7 @@ import { useCustomers, useDeleteCustomer } from "@/hooks/useCustomers";
 import { Customer } from "@/services/customer.service";
 import { CreateCustomerSheet } from "@/components/sheets/CreateCustomerSheet";
 import { DataTable } from "@/components/data-table";
+import { TableDateCell } from "@/components/table-date-cell";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { MoreHorizontal, Trash2 } from "lucide-react";
@@ -17,14 +18,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { format } from "date-fns";
 import { DateRangeFilter } from "@/components/DateRangeFilter";
 import {
   UserIcon,
   Mail01Icon,
   CallIcon,
   Location01Icon,
-  Calendar01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { PageHeader } from "@/components/page-header";
@@ -88,7 +87,7 @@ export default function CustomersPage() {
               <span className="font-medium text-black leading-tight">
                 {String(info.getValue())}
               </span>
-              <span className="text-[10px] text-gray-400 font-normal uppercase tracking-wider">
+              <span className="text-xs text-gray-400 font-normal uppercase tracking-wider">
                 {t("activeAccount")}
               </span>
             </div>
@@ -145,7 +144,7 @@ export default function CustomersPage() {
             <span className="text-black font-medium leading-tight capitalize">
               {row.original.city}, {row.original.state}
             </span>
-            <span className="text-[10px] text-gray-400 font-normal uppercase tracking-wider">
+            <span className="text-xs text-gray-400 font-normal uppercase tracking-wider">
               {row.original.country} ({row.original.zipCode})
             </span>
           </div>
@@ -153,17 +152,13 @@ export default function CustomersPage() {
       },
       {
         accessorKey: "createdAt",
-        header: t("colJoined"),
-        cell: (info) => (
-          <div className="flex items-center gap-2 text-gray-500 font-normal">
-            <HugeiconsIcon
-              icon={Calendar01Icon}
-              size={14}
-              className="text-gray-400"
-            />
-            {format(new Date(String(info.getValue())), "MMM d, yyyy")}
-          </div>
-        ),
+        header: t("colCreatedAt"),
+        cell: ({ row }) => <TableDateCell value={row.original.createdAt} />,
+      },
+      {
+        accessorKey: "updatedAt",
+        header: t("colUpdatedAt"),
+        cell: ({ row }) => <TableDateCell value={row.original.updatedAt} />,
       },
       {
         id: "actions",

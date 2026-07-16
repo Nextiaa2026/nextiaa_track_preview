@@ -14,6 +14,7 @@ import {
 import type { Shipment } from "@/services/shipment.service";
 import { CreateShipmentSheet } from "@/components/sheets/CreateShipmentSheet";
 import { DataTable } from "@/components/data-table";
+import { TableDateCell } from "@/components/table-date-cell";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -47,7 +48,6 @@ import {
   MoreHorizontalIcon,
   ViewIcon,
   PackageIcon,
-  Calendar01Icon,
   WeightIcon,
   Location01Icon,
   CircleIcon,
@@ -55,7 +55,6 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { DateRangeFilter } from "@/components/DateRangeFilter";
-import { format } from "date-fns";
 import { PageHeader } from "@/components/page-header";
 import { useTranslations } from "next-intl";
 import { ErrorState } from "@/components/ui/error-state";
@@ -168,7 +167,7 @@ export default function ShipmentsPage() {
             <span className="font-medium text-black tracking-tight leading-none mb-1">
               {String(info.getValue())}
             </span>
-            <span className="text-[10px] text-gray-400 font-normal uppercase tracking-wider">
+            <span className="text-xs text-gray-400 font-normal uppercase tracking-wider">
               {t("standardFreight")}
             </span>
           </div>
@@ -186,7 +185,7 @@ export default function ShipmentsPage() {
                 {trip.name}
               </span>
               {trip.vessel && (
-                <span className="text-[10px] text-gray-400 font-normal">
+                <span className="text-xs text-gray-400 font-normal">
                   {trip.vessel.name} {trip.vessel.imo ? `(${trip.vessel.imo})` : ""}
                 </span>
               )}
@@ -198,7 +197,7 @@ export default function ShipmentsPage() {
         accessorKey: "shipmentType",
         header: t("colShipmentType"),
         cell: ({ row }) => (
-          <span className="inline-flex items-center rounded-full bg-gray-50 border border-gray-100 px-2.5 py-1 text-[10px] uppercase tracking-wider text-gray-600 font-medium">
+          <span className="inline-flex items-center rounded-full bg-gray-50 border border-gray-100 px-2.5 py-1 text-xs uppercase tracking-wider text-gray-600 font-medium">
             {row.original.shipmentType === "international" 
               ? tsw("shipmentTypeInternational") 
               : tsw("shipmentTypeLocal")}
@@ -217,7 +216,7 @@ export default function ShipmentsPage() {
               <span className="text-black font-medium leading-tight truncate max-w-[150px]">
                 {String(info.getValue())}
               </span>
-              <span className="text-[10px] text-gray-400 font-normal flex items-center gap-1">
+              <span className="text-xs text-gray-400 font-normal flex items-center gap-1">
                 <HugeiconsIcon icon={WeightIcon} size={10} />
                 {String(info.row.original.itemWeight ?? "—")} {t("weightKg")}
               </span>
@@ -233,7 +232,7 @@ export default function ShipmentsPage() {
             <span className="text-black font-medium leading-tight">
               {row.original.sender.name}
             </span>
-            <span className="text-[10px] text-gray-400 font-normal flex items-center gap-1 uppercase tracking-wider">
+            <span className="text-xs text-gray-400 font-normal flex items-center gap-1 uppercase tracking-wider">
               <HugeiconsIcon icon={Location01Icon} size={10} />
               {row.original.sender.city}
             </span>
@@ -248,7 +247,7 @@ export default function ShipmentsPage() {
             <span className="text-black font-medium leading-tight">
               {row.original.receiver.name}
             </span>
-            <span className="text-[10px] text-gray-400 font-normal flex items-center gap-1 uppercase tracking-wider">
+            <span className="text-xs text-gray-400 font-normal flex items-center gap-1 uppercase tracking-wider">
               <HugeiconsIcon icon={Location01Icon} size={10} />
               {row.original.receiver.city}
             </span>
@@ -261,7 +260,7 @@ export default function ShipmentsPage() {
         cell: (info) => {
           const status = String(info.getValue());
           return (
-            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-medium uppercase tracking-widest border ${getStatusColor(status)}`}>
+            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium uppercase tracking-widest border ${getStatusColor(status)}`}>
               {ts(status)}
             </span>
           );
@@ -269,13 +268,13 @@ export default function ShipmentsPage() {
       },
       {
         accessorKey: "createdAt",
-        header: t("colLoggedDate"),
-        cell: (info) => (
-          <div className="flex items-center gap-2 text-gray-500 font-normal">
-            <HugeiconsIcon icon={Calendar01Icon} size={14} className="text-gray-400" />
-            {format(new Date(String(info.getValue())), "MMM d, yyyy")}
-          </div>
-        ),
+        header: t("colCreatedAt"),
+        cell: ({ row }) => <TableDateCell value={row.original.createdAt} />,
+      },
+      {
+        accessorKey: "updatedAt",
+        header: t("colUpdatedAt"),
+        cell: ({ row }) => <TableDateCell value={row.original.updatedAt} />,
       },
       {
         id: "actions",

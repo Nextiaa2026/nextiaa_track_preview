@@ -50,6 +50,7 @@ import { toast } from "sonner";
 import { Loader2, MoreHorizontal, Ship, Plane, Train, Edit2, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useDebounce } from "@/hooks/use-debounce";
+import { TableDateCell } from "@/components/table-date-cell";
 
 // ─── Vessel form schema ───────────────────────────────────────────────────────
 
@@ -202,6 +203,16 @@ export default function VesselsPage() {
             </div>
           );
         },
+      },
+      {
+        accessorKey: "createdAt",
+        header: t("colCreatedAt"),
+        cell: ({ row }) => <TableDateCell value={row.original.createdAt} />,
+      },
+      {
+        accessorKey: "updatedAt",
+        header: t("colUpdatedAt"),
+        cell: ({ row }) => <TableDateCell value={row.original.updatedAt} />,
       },
       {
         id: "actions",

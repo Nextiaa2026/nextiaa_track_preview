@@ -23,9 +23,7 @@ import {
 import { useInvoices, usePrintInvoice } from "@/hooks/useShipments";
 import { useDebounce } from "@/hooks/use-debounce";
 import type { Invoice } from "@/services/shipment.service";
-import { format } from "date-fns";
 import {
-  Calendar01Icon,
   EuroCircleIcon,
   Invoice01Icon,
   MoreHorizontalIcon,
@@ -37,6 +35,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useSettings } from "@/providers/SettingsProvider";
 import { formatCurrency } from "@/lib/utils/currency";
 import { openPrintHtml } from "@/lib/print-shipment-documents";
+import { TableDateCell } from "@/components/table-date-cell";
 
 const STATUS_OPTIONS = ["all", "draft", "issued", "paid", "overdue", "cancelled"] as const;
 
@@ -112,7 +111,7 @@ export default function InvoicesPage() {
             </button>
             <div className="flex flex-col">
               <span className="text-black font-medium leading-none mb-1">{row.original.invoiceNumber}</span>
-              <span className="text-[10px] text-gray-400 font-normal uppercase tracking-wider">
+              <span className="text-xs text-gray-400 font-normal uppercase tracking-wider">
                 {t("shipmentRef", { id: row.original.shipmentId })}
               </span>
             </div>
@@ -135,7 +134,7 @@ export default function InvoicesPage() {
         cell: ({ row }) => (
           <div className="flex flex-col">
             <span className="text-black font-medium leading-tight">{row.original.receiver?.name || "-"}</span>
-            <span className="text-[10px] text-gray-400 font-normal">
+            <span className="text-xs text-gray-400 font-normal">
               {row.original.receiver?.email || "-"}
             </span>
           </div>
@@ -154,19 +153,24 @@ export default function InvoicesPage() {
       {
         accessorKey: "issuedAt",
         header: t("colIssued"),
-        cell: ({ row }) => (
-          <div className="flex items-center gap-2 text-gray-500 font-normal">
-            <HugeiconsIcon icon={Calendar01Icon} size={14} className="text-gray-400" />
-            {format(new Date(row.original.issuedAt), "MMM d, yyyy")}
-          </div>
-        ),
+        cell: ({ row }) => <TableDateCell value={row.original.issuedAt} />,
+      },
+      {
+        accessorKey: "createdAt",
+        header: t("colCreatedAt"),
+        cell: ({ row }) => <TableDateCell value={row.original.createdAt} />,
+      },
+      {
+        accessorKey: "updatedAt",
+        header: t("colUpdatedAt"),
+        cell: ({ row }) => <TableDateCell value={row.original.updatedAt} />,
       },
       {
         accessorKey: "status",
         header: t("colStatus"),
         cell: ({ row }) => (
           <span
-            className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider border ${invoiceStatusClass(
+            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium uppercase tracking-wider border ${invoiceStatusClass(
               row.original.status,
             )}`}
           >
