@@ -6,10 +6,11 @@ import { QueryProvider } from "@/providers/QueryProvider";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { SettingsProvider } from "@/providers/SettingsProvider";
 import { Toaster } from "sonner";
-import { NextIntlClientProvider, hasLocale } from "next-intl";
+import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
+import { hasLocale } from "@/lib/has-locale";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 const inter = Inter({

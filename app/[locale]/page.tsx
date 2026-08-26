@@ -1,7 +1,7 @@
 import { redirect } from "@/lib/navigation";
 import { auth } from "@/lib/auth";
 import { setRequestLocale } from "next-intl/server";
-import { hasLocale } from "next-intl";
+import { hasLocale } from "@/lib/has-locale";
 import { routing } from "@/i18n/routing";
 import { notFound } from "next/navigation";
 
