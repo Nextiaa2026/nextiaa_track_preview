@@ -1,19 +1,14 @@
 import path from "node:path";
 
-/** Relative path for Turbopack; Webpack resolves it to an absolute path below. */
-const requestConfig = "./i18n/request.ts";
-
 /**
- * Manual next-intl setup (no `next-intl/plugin` import).
- * next-intl >= 4.5 pulls @swc/core into the plugin for optional message
- * extraction; that native binary fails on many cPanel hosts (ERR_DLOPEN_FAILED /
- * noexec). We only need the `next-intl/config` alias.
+ * Avoid `next-intl/plugin` here: it loads @swc/core native binaries and breaks
+ * on many cPanel hosts. The alias alone is enough for normal next-intl usage.
  */
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   turbopack: {
     resolveAlias: {
-      "next-intl/config": requestConfig,
+      "next-intl/config": "./i18n/request.ts",
     },
   },
   webpack(config) {
